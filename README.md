@@ -17,8 +17,7 @@ pahana-edu/
 │   │       │   └── util/            # Utilities
 │   │       ├── resources/           # Configuration files
 │   │       └── webapp/WEB-INF/      # Web configuration
-│   ├── pom.xml                      # Maven dependencies
-│   └── README.md                    # Backend documentation
+│   └── pom.xml                      # Maven dependencies
 ├── frontend/                # React Vite Application
 │   ├── src/
 │   │   ├── components/              # Reusable UI components
@@ -27,8 +26,7 @@ pahana-edu/
 │   │   ├── utils/                   # Utility functions
 │   │   ├── styles/                  # CSS/styling files
 │   │   └── App.jsx                  # Main application component
-│   ├── package.json                 # Frontend dependencies
-│   └── README.md                    # Frontend documentation
+│   └── package.json                 # Frontend dependencies
 ├── docs/                    # Project documentation
 │   ├── api/                         # API documentation
 │   ├── setup/                       # Setup guides
