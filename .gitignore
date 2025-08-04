@@ -1,0 +1,15 @@
+# Root gitignore
+node_modules/
+.env
+.DS_Store
+package-lock.json
+
+# Backend specific
+backend/target/
+backend/.idea/
+backend/*.iml
+
+# Frontend specific
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
