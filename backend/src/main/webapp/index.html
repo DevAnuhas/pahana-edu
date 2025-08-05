@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pahana Edu Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #444;
+        }
+        .api-check {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        #api-result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            display: none;
+            text-align: left;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Pahana Edu Backend</h1>
+        <p>This is the backend server for Pahana Edu platform.</p>
+    </header>
+
+    <div class="api-check">
+        <h2>API Status Check</h2>
+        <p>Click the button below to check if the API is running:</p>
+        <a href="api" class="button" id="check-api">Check API Status</a>
+        <div id="api-result">
+            <h3>API Response:</h3>
+            <pre id="json-response">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('check-api').addEventListener('click', function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('api-result');
+            const jsonResponse = document.getElementById('json-response');
+
+            resultDiv.style.display = 'block';
+            jsonResponse.textContent = 'Loading...';
+
+            fetch('api')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    jsonResponse.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    jsonResponse.textContent = 'Error checking API: ' + error.message;
+                });
+        });
+    </script>
+</body>
+</html>
