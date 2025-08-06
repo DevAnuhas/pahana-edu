@@ -121,25 +121,18 @@ npm run install:all
 
 ### 3. Database Setup
 
-```sql
--- Create database
-CREATE DATABASE pahana_edu_db;
 
--- Create user
-CREATE USER 'pahana_user'@'localhost' IDENTIFIED BY 'pahana_pass123';
-GRANT ALL PRIVILEGES ON pahana_edu_db.* TO 'pahana_user'@'localhost';
-FLUSH PRIVILEGES;
 
--- Run schema (execute backend/src/main/resources/schema.sql)
-```
+The database and tables will be automatically created at application startup through the [schema.sql](backend/src/main/resources/schema.sql) file. 
 
-### 4. Configure Environment
+### 4. Configure Database Connection
 
-```bash
-# Copy environment template
-cp .env.example .env
+Edit the [application.properties](backend/src/main/resources/application.properties) file with your database credentials:
 
-# Update database credentials in .env
+```properties
+app.datasource.url=jdbc:mysql://localhost:3306/pahana_bookshop?createDatabaseIfNotExist=true&allowMultiQueries=true
+app.datasource.username=root
+app.datasource.password=root1234
 ```
 
 ### 5. Start Development Servers
