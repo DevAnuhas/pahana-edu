@@ -4,10 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.pahanaedu</groupId>
+    <parent>
+        <groupId>com.pahanaedu</groupId>
+        <artifactId>pahana-edu</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>pahana-edu-backend</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>pahana-edu-backend</name>
     <packaging>war</packaging>
 
     <properties>
@@ -19,11 +24,11 @@
     </properties>
 
     <dependencies>
-        <!-- Jakarta Servlet -->
+        <!-- Java Servlet API -->
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -75,6 +80,16 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <path>/</path>
+                    <contextReloadable>true</contextReloadable>
+                    <update>true</update>
                 </configuration>
             </plugin>
         </plugins>

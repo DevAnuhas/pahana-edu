@@ -28,9 +28,6 @@ pahana-edu/
 │   │   └── App.jsx                  # Main application component
 │   └── package.json                 # Frontend dependencies
 ├── docs/                    # Project documentation
-│   ├── api/                         # API documentation
-│   ├── setup/                       # Setup guides
-│   └── deployment/                  # Deployment guides
 ├── scripts/                 # Build and deployment scripts
 ├── docker/                  # Docker configurations (optional)
 ├── .gitignore              # Git ignore rules
@@ -70,7 +67,7 @@ pahana-edu/
 
 ### Frontend
 
-- **React 18** - Modern UI library
+- **React 19** - Modern UI library
 - **Vite** - Fast build tool and dev server
 - **React Router** - Client-side routing
 - **Axios** - HTTP client for API calls
@@ -79,10 +76,10 @@ pahana-edu/
 ### Backend
 
 - **Java 11+** - Programming language
-- **Jakarta EE Servlets** - Web framework
-- **Apache Tomcat 10** - Application server
+- **Java EE Servlets** - Web framework
+- **Apache Tomcat 7** - Application server
 - **Maven** - Build and dependency management
-- **Jackson** - JSON processing
+- **Gson** - JSON processing
 
 ### Database
 
@@ -92,7 +89,7 @@ pahana-edu/
 
 ### Development Tools
 
-- **IntelliJ IDEA Ultimate** - IDE
+- **IntelliJ IDEA** - IDE
 - **GitHub Copilot** - AI-powered coding assistant
 - **Git** - Version control
 - **npm/Node.js** - Package management
@@ -111,7 +108,7 @@ pahana-edu/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/pahana-edu.git
+git clone https://github.com/DevAnuhas/pahana-edu.git
 cd pahana-edu
 ```
 
@@ -140,9 +137,9 @@ FLUSH PRIVILEGES;
 
 ```bash
 # Copy environment template
-cp .env.example .env.local
+cp .env.example .env
 
-# Update database credentials in .env.local
+# Update database credentials in .env
 ```
 
 ### 5. Start Development Servers
