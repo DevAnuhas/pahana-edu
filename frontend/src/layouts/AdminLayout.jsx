@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -15,6 +15,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -27,6 +33,29 @@ import {
 
 export default function AdminLayout() {
 	const { user, logout } = useAuth();
+	const location = useLocation();
+
+	const pageNameMapping = {
+		dashboard: "Dashboard",
+		customers: "Customer Management",
+		items: "Item Management",
+		billing: "Billing System",
+		bills: "Bill Management",
+		help: "Help Section",
+		settings: "Settings",
+	};
+
+	const getCurrentPage = () => {
+		const path = location.pathname.split("/").filter(Boolean);
+		if (path.length > 1) {
+			const pageName = path[1];
+			return (
+				pageNameMapping[pageName] ||
+				pageName.charAt(0).toUpperCase() + pageName.slice(1).replace(/-/g, " ")
+			);
+		}
+		return "Dashboard";
+	};
 
 	return (
 		<SidebarProvider>
@@ -38,13 +67,22 @@ export default function AdminLayout() {
 					<Breadcrumb>
 						<BreadcrumbList>
 							<BreadcrumbItem className="hidden md:block">
-								<BreadcrumbLink href="/admin/dashboard">
-									Management System
+								<BreadcrumbLink asChild>
+									<Link to="/admin/dashboard">Pahana Edu Bookshop</Link>
 								</BreadcrumbLink>
 							</BreadcrumbItem>
 							<BreadcrumbSeparator className="hidden md:block" />
 							<BreadcrumbItem>
-								<BreadcrumbPage>Dashboard</BreadcrumbPage>
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<BreadcrumbPage>{getCurrentPage()}</BreadcrumbPage>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>You are here: {getCurrentPage()}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							</BreadcrumbItem>
 						</BreadcrumbList>
 					</Breadcrumb>

@@ -11,6 +11,10 @@ import AdminLayout from "./layouts/AdminLayout";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import CustomerManagement from "./pages/CustomerManagement";
+import ItemManagement from "./pages/ItemManagement";
+import BillingSystem from "./pages/BillingSystem";
+import BillManagement from "./pages/BillManagement";
+import HelpSection from "./pages/HelpSection";
 
 const AuthRedirect = () => {
 	const { isAuthenticated, loading } = useAuth();
@@ -41,6 +45,10 @@ function App() {
 						<Route path="/admin" element={<AdminLayout />}>
 							<Route path="dashboard" element={<Dashboard />} />
 							<Route path="customers" element={<CustomerManagement />} />
+							<Route path="items" element={<ItemManagement />} />
+							<Route path="billing" element={<BillingSystem />} />
+							<Route path="bills" element={<BillManagement />} />
+							<Route path="help" element={<HelpSection />} />
 						</Route>
 					</Route>
 

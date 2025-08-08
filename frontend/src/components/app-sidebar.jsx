@@ -8,7 +8,7 @@ import {
 	BarChart3,
 	Settings,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router-dom";
 
 import {
 	Sidebar,
@@ -26,38 +26,38 @@ import {
 const menuItems = [
 	{
 		title: "Dashboard",
-		url: "/dashboard",
+		url: "/admin/dashboard",
 		icon: BarChart3,
 	},
 	{
 		title: "Customer Management",
-		url: "/customers",
+		url: "/admin/customers",
 		icon: Users,
 	},
 	{
 		title: "Item Management",
-		url: "/items",
+		url: "/admin/items",
 		icon: Package,
 	},
 	{
 		title: "Billing System",
-		url: "/billing",
+		url: "/admin/billing",
 		icon: Receipt,
 	},
 	{
 		title: "Bill Management",
-		url: "/bills",
+		url: "/admin/bills",
 		icon: FileText,
 	},
 	{
 		title: "Help Section",
-		url: "/help",
+		url: "/admin/help",
 		icon: HelpCircle,
 	},
 ];
 
 export function AppSidebar() {
-	const navigate = useNavigate();
+	const location = window.location.pathname;
 
 	return (
 		<Sidebar>
@@ -78,8 +78,8 @@ export function AppSidebar() {
 						<SidebarMenu className="space-y-2">
 							{menuItems.map((item) => (
 								<SidebarMenuItem key={item.title}>
-									<SidebarMenuButton asChild isActive={navigate === item.url}>
-										<Link href={item.url}>
+									<SidebarMenuButton asChild isActive={location === item.url}>
+										<Link to={item.url}>
 											<item.icon />
 											<span>{item.title}</span>
 										</Link>
@@ -94,8 +94,10 @@ export function AppSidebar() {
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton>
-							<Settings />
-							<span>Settings</span>
+							<Link to="/admin/settings">
+								<Settings />
+								<span>Settings</span>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
