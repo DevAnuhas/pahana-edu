@@ -25,7 +25,6 @@ const LoginPage = () => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
-
 			[name]: value,
 		}));
 		// Clear error when user starts typing
@@ -70,7 +69,7 @@ const LoginPage = () => {
 			const result = await login(credentials);
 
 			if (result.success) {
-				navigate("/dashboard");
+				navigate("/admin/dashboard");
 			} else {
 				setErrors({ general: result.error });
 			}
