@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.pahanaedu.service.AuthService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,7 +15,6 @@ import java.util.logging.Logger;
 /**
  * Servlet for handling user logout
  */
-@WebServlet(name = "LogoutServlet", urlPatterns = {"/api/auth/logout"})
 public class LogoutServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(LogoutServlet.class.getName());
     private final Gson gson = new Gson();

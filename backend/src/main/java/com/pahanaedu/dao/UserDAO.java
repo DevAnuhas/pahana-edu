@@ -2,6 +2,7 @@ package com.pahanaedu.dao;
 
 import com.pahanaedu.model.User;
 import com.pahanaedu.utils.DatabaseConnection;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,9 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Data Access Object for User-related database operations
@@ -66,38 +64,37 @@ public class UserDAO {
     public User authenticate(String username, String password) {
         User user = findByUsername(username);
 
-        if (user != null && verifyPassword(password, user.getPassword())) {
-            // Remove password before returning the user
-            user.setPassword(null);
-            return user;
+        if (user != null) {
+            boolean isPasswordValid = verifyPassword(password, user.getPassword());
+            
+            if (isPasswordValid) {
+                user.setPassword(null);
+                return user;
+            }
         }
 
         return null;
     }
 
-    private boolean verifyPassword(String plainPassword, String hashedPassword) {
-        if (hashedPassword == null) {
+    private boolean verifyPassword(String userPassword, String dbPassword) {
+        if (dbPassword == null || userPassword == null) {
             return false;
         }
-        return hashedPassword.equals(hashPassword(plainPassword));
-    }
-
-    private String hashPassword(String password) {
+        
         try {
-            // Simple SHA-256 hashing
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hashedBytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashedBytes) {
-                hexString.append(String.format("%02x", b));
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.log(Level.SEVERE, "Error hashing password", e);
-            return password; // Not ideal
+            return BCrypt.checkpw(userPassword, dbPassword);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error verifying password", e);
+            return false;
         }
+    }
+    
+    /**
+     * Hash a password using BCrypt with salt rounds 10
+     * This method can be used for user registration or password updates
+     */
+    public String hashPassword(String plainPassword) {
+        return BCrypt.hashpw(plainPassword, BCrypt.gensalt(10));
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS purchase_items (
 
 -- Insert default admin user
 INSERT INTO users (username, password, full_name, role, email)
-VALUES ('admin', '$2a$10$hKDVYxLefVHV/vtuPhWD3OigtRyOykRLDdUAp80Z1crSoS1lFqaFS', 'System Administrator', 'ADMIN', 'admin@pahanaedu.com')
+VALUES ('admin', '$2a$10$W9SVm2Fy3ziFLwuasTa.k.BzY95HYim8uHpiOGUfj57sM7j9sYhFK', 'System Administrator', 'ADMIN', 'admin@pahanaedu.com')
 ON DUPLICATE KEY UPDATE username = 'admin';
 
 -- Insert default categories
