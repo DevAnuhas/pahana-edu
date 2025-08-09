@@ -18,13 +18,13 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import {
 	Table,
 	TableBody,
@@ -34,6 +34,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Search, Plus, Edit, Trash2, Loader2, Phone, Mail } from "lucide-react";
 import customerAPI from "@/services/customerAPI";
 import { showToast } from "@/lib/toast";
@@ -42,7 +43,7 @@ export default function CustomerManagement() {
 	const [customers, setCustomers] = useState([]);
 	const [filteredCustomers, setFilteredCustomers] = useState([]);
 	const [searchTerm, setSearchTerm] = useState("");
-	const [isSheetOpen, setIsSheetOpen] = useState(false);
+	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [selectedCustomer, setSelectedCustomer] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -128,7 +129,7 @@ export default function CustomerManagement() {
 		return Object.keys(errors).length === 0;
 	};
 
-	const openAddSheet = () => {
+	const openAddDialog = () => {
 		setSelectedCustomer(null);
 		setFormData({
 			accountNumber: "",
@@ -139,10 +140,10 @@ export default function CustomerManagement() {
 			registrationDate: new Date().toISOString().split("T")[0],
 		});
 		setFormErrors({});
-		setIsSheetOpen(true);
+		setIsAddDialogOpen(true);
 	};
 
-	const openEditSheet = (customer) => {
+	const openEditDialog = (customer) => {
 		setSelectedCustomer(customer);
 		setFormData({
 			accountNumber: customer.accountNumber,
@@ -155,7 +156,7 @@ export default function CustomerManagement() {
 				: new Date().toISOString().split("T")[0],
 		});
 		setFormErrors({});
-		setIsSheetOpen(true);
+		setIsAddDialogOpen(true);
 	};
 
 	const openDeleteDialog = (customer) => {
@@ -181,7 +182,7 @@ export default function CustomerManagement() {
 			}
 
 			fetchCustomers();
-			setIsSheetOpen(false);
+			setIsAddDialogOpen(false);
 		} catch (error) {
 			console.error("Error saving customer:", error);
 			showToast.error(
@@ -224,7 +225,7 @@ export default function CustomerManagement() {
 						Manage customer accounts and information
 					</p>
 				</div>
-				<Button onClick={openAddSheet} className="flex items-center gap-1">
+				<Button onClick={openAddDialog} className="flex items-center gap-1">
 					<Plus className="h-4 w-4" /> Add Customer
 				</Button>
 			</div>
@@ -300,7 +301,7 @@ export default function CustomerManagement() {
 													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => openEditSheet(customer)}
+														onClick={() => openEditDialog(customer)}
 													>
 														<Edit className="h-4 w-4" />
 													</Button>
@@ -330,117 +331,127 @@ export default function CustomerManagement() {
 				</Card>
 			)}
 
-			{/* Add/Edit Customer Sheet */}
-			<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-				<SheetContent className="sm:max-w-md">
-					<SheetHeader>
-						<SheetTitle>
+			{/* Add/Edit Customer Dialog */}
+			<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+				<DialogContent className="sm:max-w-[550px]">
+					<DialogHeader>
+						<DialogTitle>
 							{selectedCustomer ? "Edit Customer" : "Add New Customer"}
-						</SheetTitle>
-						<SheetDescription>
+						</DialogTitle>
+						<DialogDescription>
 							{selectedCustomer
 								? "Update customer information in the form below"
 								: "Fill in the details to create a new customer"}
-						</SheetDescription>
-					</SheetHeader>
-					<div className="py-6 px-4 space-y-4">
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Account Number</label>
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="accountNumber">Account Number</Label>
 							<Input
+								id="accountNumber"
 								name="accountNumber"
 								value={formData.accountNumber}
 								onChange={handleInputChange}
 								placeholder="Enter account number"
-								className={formErrors.accountNumber ? "border-red-500" : ""}
+								className="col-span-3"
 								disabled={selectedCustomer}
 							/>
 							{formErrors.accountNumber && (
-								<p className="text-red-500 text-xs mt-1">
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
 									{formErrors.accountNumber}
 								</p>
 							)}
 						</div>
 
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Name</label>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="name">Name</Label>
 							<Input
+								id="name"
 								name="name"
 								value={formData.name}
 								onChange={handleInputChange}
 								placeholder="Enter customer name"
-								className={formErrors.name ? "border-red-500" : ""}
+								className="col-span-3"
 							/>
 							{formErrors.name && (
-								<p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
+									{formErrors.name}
+								</p>
 							)}
 						</div>
 
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Address</label>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="address">Address</Label>
 							<Input
+								id="address"
 								name="address"
 								value={formData.address}
 								onChange={handleInputChange}
 								placeholder="Enter address"
-								className={formErrors.address ? "border-red-500" : ""}
+								className="col-span-3"
 							/>
 							{formErrors.address && (
-								<p className="text-red-500 text-xs mt-1">
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
 									{formErrors.address}
 								</p>
 							)}
 						</div>
 
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Telephone</label>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="telephone">Telephone</Label>
 							<Input
+								id="telephone"
 								name="telephone"
 								value={formData.telephone}
 								onChange={handleInputChange}
 								placeholder="Enter telephone number"
-								className={formErrors.telephone ? "border-red-500" : ""}
+								className="col-span-3"
 							/>
 							{formErrors.telephone && (
-								<p className="text-red-500 text-xs mt-1">
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
 									{formErrors.telephone}
 								</p>
 							)}
 						</div>
 
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Email (Optional)</label>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="email">Email (Optional)</Label>
 							<Input
+								id="email"
 								name="email"
 								value={formData.email}
 								onChange={handleInputChange}
 								placeholder="Enter email address"
-								className={formErrors.email ? "border-red-500" : ""}
+								className="col-span-3"
 							/>
 							{formErrors.email && (
-								<p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
+									{formErrors.email}
+								</p>
 							)}
 						</div>
 
-						<div className="space-y-2">
-							<label className="text-sm font-medium">Registration Date</label>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="registrationDate">Registration Date</Label>
 							<Input
+								id="registrationDate"
 								type="date"
 								name="registrationDate"
 								value={formData.registrationDate}
 								onChange={handleInputChange}
-								className={formErrors.registrationDate ? "border-red-500" : ""}
+								className="col-span-3"
 							/>
 							{formErrors.registrationDate && (
-								<p className="text-red-500 text-xs mt-1">
+								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
 									{formErrors.registrationDate}
 								</p>
 							)}
 						</div>
 					</div>
-					<SheetFooter className="sm:justify-end">
+					<DialogFooter>
 						<Button
 							variant="outline"
-							onClick={() => setIsSheetOpen(false)}
+							onClick={() => setIsAddDialogOpen(false)}
 							disabled={isSaving}
 						>
 							Cancel
@@ -455,9 +466,9 @@ export default function CustomerManagement() {
 								"Save Customer"
 							)}
 						</Button>
-					</SheetFooter>
-				</SheetContent>
-			</Sheet>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog
