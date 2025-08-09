@@ -3,7 +3,6 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -26,10 +25,16 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Search, Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Loader2, Phone, Mail } from "lucide-react";
 import customerAPI from "@/services/customerAPI";
 import { showToast } from "@/lib/toast";
 
@@ -44,24 +49,21 @@ export default function CustomerManagement() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
-	// Form state
 	const [formData, setFormData] = useState({
 		accountNumber: "",
 		name: "",
 		address: "",
 		telephone: "",
 		email: "",
+		registrationDate: new Date().toISOString().split("T")[0],
 	});
 
-	// Form validation
 	const [formErrors, setFormErrors] = useState({});
 
-	// Load customers on component mount
 	useEffect(() => {
 		fetchCustomers();
 	}, []);
 
-	// Filter customers when search term changes
 	useEffect(() => {
 		if (searchTerm.trim() === "") {
 			setFilteredCustomers(customers);
@@ -102,7 +104,6 @@ export default function CustomerManagement() {
 			[name]: value,
 		});
 
-		// Clear error for this field when user types
 		if (formErrors[name]) {
 			setFormErrors({
 				...formErrors,
@@ -120,6 +121,8 @@ export default function CustomerManagement() {
 		if (!formData.telephone) errors.telephone = "Telephone is required";
 		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
 			errors.email = "Invalid email format";
+		if (!formData.registrationDate)
+			errors.registrationDate = "Registration date is required";
 
 		setFormErrors(errors);
 		return Object.keys(errors).length === 0;
@@ -133,6 +136,7 @@ export default function CustomerManagement() {
 			address: "",
 			telephone: "",
 			email: "",
+			registrationDate: new Date().toISOString().split("T")[0],
 		});
 		setFormErrors({});
 		setIsSheetOpen(true);
@@ -146,6 +150,9 @@ export default function CustomerManagement() {
 			address: customer.address,
 			telephone: customer.telephone,
 			email: customer.email || "",
+			registrationDate: customer.registrationDate
+				? new Date(customer.registrationDate).toISOString().split("T")[0]
+				: new Date().toISOString().split("T")[0],
 		});
 		setFormErrors({});
 		setIsSheetOpen(true);
@@ -162,7 +169,6 @@ export default function CustomerManagement() {
 		setIsSaving(true);
 		try {
 			if (selectedCustomer) {
-				// Update existing customer
 				const updatedCustomer = {
 					...selectedCustomer,
 					...formData,
@@ -170,12 +176,10 @@ export default function CustomerManagement() {
 				await customerAPI.updateCustomer(selectedCustomer.id, updatedCustomer);
 				showToast.success("Customer updated successfully");
 			} else {
-				// Create new customer
 				await customerAPI.createCustomer(formData);
 				showToast.success("Customer created successfully");
 			}
 
-			// Refresh customer list
 			fetchCustomers();
 			setIsSheetOpen(false);
 		} catch (error) {
@@ -210,22 +214,19 @@ export default function CustomerManagement() {
 	};
 
 	return (
-		<div className="flex flex-col h-full">
+		<div className="flex flex-col space-y-6 h-full">
 			<div className="flex justify-between items-center mb-6">
-				<h1 className="text-2xl font-bold">Customer Management</h1>
+				<div>
+					<h1 className="text-3xl font-bold tracking-tight">
+						Customer Management
+					</h1>
+					<p className="text-muted-foreground">
+						Manage customer accounts and information
+					</p>
+				</div>
 				<Button onClick={openAddSheet} className="flex items-center gap-1">
 					<Plus className="h-4 w-4" /> Add Customer
 				</Button>
-			</div>
-
-			<div className="relative mb-6">
-				<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-				<Input
-					placeholder="Search customers..."
-					className="pl-10"
-					value={searchTerm}
-					onChange={handleSearchChange}
-				/>
 			</div>
 
 			{isLoading ? (
@@ -234,69 +235,99 @@ export default function CustomerManagement() {
 					<span className="ml-2">Loading customers...</span>
 				</div>
 			) : (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-					{filteredCustomers.length > 0 ? (
-						filteredCustomers.map((customer) => (
-							<Card key={customer.id} className="overflow-hidden">
-								<CardHeader className="pb-2">
-									<div className="flex justify-between items-start">
-										<div>
-											<CardTitle className="text-lg">{customer.name}</CardTitle>
-											<CardDescription>
-												Account #: {customer.accountNumber}
-											</CardDescription>
-										</div>
-										<Badge>{customer.active ? "Active" : "Inactive"}</Badge>
-									</div>
-								</CardHeader>
-								<CardContent className="pb-2">
-									<div className="space-y-2 text-sm">
-										<div>
-											<span className="font-medium">Address:</span>{" "}
-											{customer.address}
-										</div>
-										<div>
-											<span className="font-medium">Telephone:</span>{" "}
-											{customer.telephone}
-										</div>
-										{customer.email && (
-											<div>
-												<span className="font-medium">Email:</span>{" "}
-												{customer.email}
-											</div>
-										)}
-									</div>
-								</CardContent>
-								<CardFooter className="pt-2">
-									<div className="flex justify-end gap-2 w-full">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => openEditSheet(customer)}
-										>
-											<Edit className="h-4 w-4 mr-1" /> Edit
-										</Button>
-										<Button
-											variant="destructive"
-											size="sm"
-											onClick={() => openDeleteDialog(customer)}
-										>
-											<Trash2 className="h-4 w-4 mr-1" /> Delete
-										</Button>
-									</div>
-								</CardFooter>
-							</Card>
-						))
-					) : (
-						<div className="col-span-full flex justify-center items-center h-64 bg-gray-50 rounded-lg">
-							<p className="text-gray-500">
-								{searchTerm
-									? "No customers match your search"
-									: "No customers found. Add one to get started."}
-							</p>
+				<Card>
+					<CardHeader>
+						<CardTitle>Customer List</CardTitle>
+						<CardDescription>
+							View and manage all customer accounts
+						</CardDescription>
+						<div className="flex items-center space-x-2 mt-4">
+							<Search className="h-4 w-4 text-muted-foreground" />
+							<Input
+								placeholder="Search customers..."
+								value={searchTerm}
+								onChange={handleSearchChange}
+								className="max-w-sm"
+							/>
 						</div>
-					)}
-				</div>
+					</CardHeader>
+					<CardContent>
+						{filteredCustomers.length > 0 ? (
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Account Number</TableHead>
+										<TableHead>Name</TableHead>
+										<TableHead>Contact</TableHead>
+										<TableHead>Address</TableHead>
+										<TableHead>Registration Date</TableHead>
+										<TableHead>Actions</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{filteredCustomers.map((customer) => (
+										<TableRow key={customer.id}>
+											<TableCell className="font-medium">
+												{customer.accountNumber}
+											</TableCell>
+											<TableCell>{customer.name}</TableCell>
+											<TableCell>
+												<div className="space-y-1">
+													<div className="flex items-center gap-1 text-sm">
+														<Phone className="h-3 w-3" />
+														{customer.telephone}
+													</div>
+													{customer.email && (
+														<div className="flex items-center gap-1 text-sm text-muted-foreground">
+															<Mail className="h-3 w-3" />
+															{customer.email}
+														</div>
+													)}
+												</div>
+											</TableCell>
+											<TableCell className="max-w-[200px] truncate">
+												{customer.address}
+											</TableCell>
+											<TableCell>
+												{customer.registrationDate
+													? new Date(
+															customer.registrationDate
+													  ).toLocaleDateString()
+													: "N/A"}
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-2">
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => openEditSheet(customer)}
+													>
+														<Edit className="h-4 w-4" />
+													</Button>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => openDeleteDialog(customer)}
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						) : (
+							<div className="flex justify-center items-center h-32 bg-gray-50 rounded-lg">
+								<p className="text-gray-500">
+									{searchTerm
+										? "No customers match your search"
+										: "No customers found. Add one to get started."}
+								</p>
+							</div>
+						)}
+					</CardContent>
+				</Card>
 			)}
 
 			{/* Add/Edit Customer Sheet */}
@@ -321,6 +352,7 @@ export default function CustomerManagement() {
 								onChange={handleInputChange}
 								placeholder="Enter account number"
 								className={formErrors.accountNumber ? "border-red-500" : ""}
+								disabled={selectedCustomer}
 							/>
 							{formErrors.accountNumber && (
 								<p className="text-red-500 text-xs mt-1">
@@ -386,6 +418,22 @@ export default function CustomerManagement() {
 							/>
 							{formErrors.email && (
 								<p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+							)}
+						</div>
+
+						<div className="space-y-2">
+							<label className="text-sm font-medium">Registration Date</label>
+							<Input
+								type="date"
+								name="registrationDate"
+								value={formData.registrationDate}
+								onChange={handleInputChange}
+								className={formErrors.registrationDate ? "border-red-500" : ""}
+							/>
+							{formErrors.registrationDate && (
+								<p className="text-red-500 text-xs mt-1">
+									{formErrors.registrationDate}
+								</p>
 							)}
 						</div>
 					</div>
