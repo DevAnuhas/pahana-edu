@@ -1,27 +1,8 @@
 import apiClient from "./api";
-
-// Helper function for retrying API calls
-const withRetry = async (apiCall, maxRetries = 3, delay = 1000) => {
-	let lastError;
-	for (let attempt = 0; attempt < maxRetries; attempt++) {
-		try {
-			return await apiCall();
-		} catch (error) {
-			lastError = error;
-			if (attempt < maxRetries - 1) {
-				// Wait before next retry with exponential backoff
-				await new Promise((resolve) =>
-					setTimeout(resolve, delay * Math.pow(2, attempt))
-				);
-			}
-		}
-	}
-	throw lastError; // If all retries fail, throw the last error
-};
+import { withRetry } from "./utils";
 
 // Book API functions
 const bookAPI = {
-	// Get all books
 	getAllBooks: async () => {
 		return withRetry(async () => {
 			const response = await apiClient.get("/books");
@@ -29,7 +10,6 @@ const bookAPI = {
 		});
 	},
 
-	// Get book by ID
 	getBookById: async (id) => {
 		return withRetry(async () => {
 			const response = await apiClient.get(`/books/${id}`);
@@ -37,7 +17,6 @@ const bookAPI = {
 		});
 	},
 
-	// Get book by ISBN
 	getBookByIsbn: async (isbn) => {
 		return withRetry(async () => {
 			const response = await apiClient.get(`/books/isbn/${isbn}`);
@@ -45,7 +24,6 @@ const bookAPI = {
 		});
 	},
 
-	// Get books by category
 	getBooksByCategory: async (categoryId) => {
 		return withRetry(async () => {
 			const response = await apiClient.get(`/books/category/${categoryId}`);
@@ -53,7 +31,6 @@ const bookAPI = {
 		});
 	},
 
-	// Search books
 	searchBooks: async (searchTerm) => {
 		return withRetry(async () => {
 			const response = await apiClient.get(
@@ -63,7 +40,6 @@ const bookAPI = {
 		});
 	},
 
-	// Create a new book
 	createBook: async (bookData) => {
 		return withRetry(async () => {
 			const response = await apiClient.post("/books", bookData);
@@ -71,7 +47,6 @@ const bookAPI = {
 		});
 	},
 
-	// Update an existing book
 	updateBook: async (id, bookData) => {
 		return withRetry(async () => {
 			const response = await apiClient.put(`/books/${id}`, bookData);
@@ -79,7 +54,6 @@ const bookAPI = {
 		});
 	},
 
-	// Update book stock
 	updateBookStock: async (id, quantityChange) => {
 		return withRetry(async () => {
 			const response = await apiClient.patch(`/books/${id}/stock`, {
@@ -89,7 +63,6 @@ const bookAPI = {
 		});
 	},
 
-	// Delete a book
 	deleteBook: async (id) => {
 		return withRetry(async () => {
 			const response = await apiClient.delete(`/books/${id}`);
@@ -97,7 +70,6 @@ const bookAPI = {
 		});
 	},
 
-	// Get all categories
 	getAllCategories: async () => {
 		return withRetry(async () => {
 			const response = await apiClient.get("/categories");
@@ -105,7 +77,6 @@ const bookAPI = {
 		});
 	},
 
-	// Get all publishers
 	getAllPublishers: async () => {
 		return withRetry(async () => {
 			const response = await apiClient.get("/publishers");

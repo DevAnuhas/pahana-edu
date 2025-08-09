@@ -37,6 +37,23 @@ apiClient.interceptors.response.use(
 
 		if (!error.response) {
 			console.error("Network error or server not reachable");
+		} else {
+			console.error("Status:", error.response.status);
+			console.error("Status Text:", error.response.statusText);
+			console.error("Response Data:", error.response.data);
+
+			// Format backend validation errors
+			if (error.response.status === 400 && error.response.data) {
+				if (typeof error.response.data === "object") {
+					const errorMessages = [];
+					for (const [key, value] of Object.entries(error.response.data)) {
+						errorMessages.push(`${key}: ${value}`);
+					}
+					error.message = errorMessages.join(", ");
+				} else if (typeof error.response.data === "string") {
+					error.message = error.response.data;
+				}
+			}
 		}
 
 		return Promise.reject(error);
