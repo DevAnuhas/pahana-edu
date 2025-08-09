@@ -15,6 +15,7 @@ import ItemManagement from "./pages/ItemManagement";
 import BillingSystem from "./pages/BillingSystem";
 import BillManagement from "./pages/BillManagement";
 import HelpSection from "./pages/HelpSection";
+import { Toaster } from "./components/ui/toaster";
 
 const AuthRedirect = () => {
 	const { isAuthenticated, loading } = useAuth();
@@ -54,6 +55,7 @@ function App() {
 
 					{/* <Route path="*" element={<Navigate to="/404" />} /> */}
 				</Routes>
+				<Toaster />
 			</Router>
 		</AuthProvider>
 	);
