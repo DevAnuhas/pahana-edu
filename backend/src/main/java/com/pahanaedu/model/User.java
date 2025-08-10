@@ -122,6 +122,8 @@ public class User {
                 ", role='" + role + '\'' +
                 ", email='" + email + '\'' +
                 ", active=" + active +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

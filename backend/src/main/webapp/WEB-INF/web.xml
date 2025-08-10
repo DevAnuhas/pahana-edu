@@ -6,54 +6,6 @@
 
     <display-name>Pahana Edu Backend</display-name>
 
-    <!-- Servlet Definitions -->
-    <servlet>
-        <servlet-name>ApiServlet</servlet-name>
-        <servlet-class>com.pahanaedu.controller.ApiServlet</servlet-class>
-    </servlet>
-    
-    <servlet>
-        <servlet-name>ProfileServlet</servlet-name>
-        <servlet-class>com.pahanaedu.controller.ProfileServlet</servlet-class>
-    </servlet>
-    
-    <servlet>
-        <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>com.pahanaedu.controller.LoginServlet</servlet-class>
-    </servlet>
-    
-    <servlet>
-        <servlet-name>LogoutServlet</servlet-name>
-        <servlet-class>com.pahanaedu.controller.LogoutServlet</servlet-class>
-    </servlet>
-
-    <!-- Servlet Mappings -->
-    <servlet-mapping>
-        <servlet-name>ApiServlet</servlet-name>
-        <url-pattern>/api</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>ApiServlet</servlet-name>
-        <url-pattern>/api/</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>ProfileServlet</servlet-name>
-        <url-pattern>/api/auth/profile</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>LoginServlet</servlet-name>
-        <url-pattern>/api/auth/login</url-pattern>
-    </servlet-mapping>
-    
-    <servlet-mapping>
-        <servlet-name>LogoutServlet</servlet-name>
-        <url-pattern>/api/auth/logout</url-pattern>
-    </servlet-mapping>
-
-    <!-- CORS Filter -->
     <filter>
         <filter-name>CORSFilter</filter-name>
         <filter-class>com.pahanaedu.utils.CORSFilter</filter-class>

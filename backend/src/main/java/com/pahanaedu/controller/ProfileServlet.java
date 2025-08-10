@@ -6,6 +6,7 @@ import com.pahanaedu.model.User;
 import com.pahanaedu.service.AuthService;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +17,7 @@ import java.util.logging.Logger;
 /**
  * Servlet for retrieving the current user's profile information
  */
+@WebServlet(name = "ProfileServlet", urlPatterns = {"/api/auth/profile"})
 public class ProfileServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(ProfileServlet.class.getName());
     private final Gson gson = new Gson();
