@@ -1,178 +1,295 @@
-import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+	Users,
+	Package,
+	Receipt,
+	DollarSign,
+	ShoppingCart,
+	Loader2,
+	HelpCircle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import customerAPI from "@/services/customerAPI";
+import bookAPI from "@/services/bookAPI";
+import billingAPI from "@/services/billingAPI";
+import { formatCurrency } from "@/services/utils";
+import { showToast } from "@/lib/toast";
 
-const Dashboard = () => {
-  const { user, logout } = useAuth();
+export default function Dashboard() {
+	const [isLoading, setIsLoading] = useState(true);
+	const [dashboardData, setDashboardData] = useState({
+		customerCount: 0,
+		bookCount: 0,
+		monthlySales: 0,
+		orderCount: 0,
+		recentInvoices: [],
+	});
+	const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await logout();
-  };
+	useEffect(() => {
+		fetchDashboardData();
+	}, []);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Pahana Edu Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {user?.fullName || user?.username}
-              </span>
-              <Button variant="outline" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+	const fetchDashboardData = async () => {
+		setIsLoading(true);
+		try {
+			const customers = await customerAPI.getAllCustomers();
+			const customerCount = customers ? customers.length : 0;
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Stats Cards */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Customers
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        1,234
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+			const books = await bookAPI.getAllBooks();
+			const bookCount = books ? books.length : 0;
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Books
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        5,678
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+			const invoices = await billingAPI.getAllInvoices();
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Orders
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        2,345
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+			let totalSales = 0;
+			const recentInvoices = [];
 
-          {/* User Profile Section */}
-          <div className="mt-8">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  User Profile
-                </h3>
-                <div className="mt-5">
-                  <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.fullName || 'N/A'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Username</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.username}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Email</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{user?.email || 'N/A'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Role</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {user?.role}
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
+			if (invoices && invoices.length > 0) {
+				invoices.sort(
+					(a, b) => new Date(b.invoiceDate) - new Date(a.invoiceDate)
+				);
 
-          {/* Quick Actions */}
-          <div className="mt-8">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Quick Actions
-                </h3>
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <Button className="w-full" variant="outline">
-                    Add Customer
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    Add Book
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    Create Invoice
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    View Reports
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
+				totalSales = invoices.reduce((sum, invoice) => {
+					return sum + parseFloat(invoice.totalAmount || 0);
+				}, 0);
 
-export default Dashboard;
+				const recent = invoices.slice(0, 4).map((invoice) => ({
+					id: invoice.invoiceNumber,
+					customer: invoice.customerName || "Walk-in Customer",
+					amount: formatCurrency(invoice.totalAmount),
+					status: "Completed",
+				}));
+
+				recentInvoices.push(...recent);
+			}
+
+			setDashboardData({
+				customerCount,
+				bookCount,
+				monthlySales: totalSales,
+				orderCount: invoices ? invoices.length : 0,
+				recentInvoices,
+			});
+		} catch (error) {
+			console.error("Error fetching dashboard data:", error);
+			showToast.error("Failed to load dashboard data");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleQuickAction = (action) => {
+		switch (action) {
+			case "new-bill":
+				navigate("/admin/billing");
+				break;
+			case "new-customer":
+				navigate("/admin/customers");
+				break;
+			case "new-book":
+				navigate("/admin/items");
+				break;
+			case "help":
+				navigate("/admin/help");
+				break;
+			default:
+				break;
+		}
+	};
+
+	return (
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+				<p className="text-muted-foreground">
+					Welcome to Pahana Edu Bookshop Management System
+				</p>
+			</div>
+
+			{isLoading ? (
+				<div className="flex items-center justify-center h-64">
+					<Loader2 className="h-8 w-8 animate-spin text-primary" />
+					<span className="ml-2">Loading dashboard data...</span>
+				</div>
+			) : (
+				<>
+					{/* Stats Cards */}
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">
+									Total Customers
+								</CardTitle>
+								<Users className="h-4 w-4 text-muted-foreground" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">
+									{dashboardData.customerCount}
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Active registered customers
+								</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">
+									Books in Stock
+								</CardTitle>
+								<Package className="h-4 w-4 text-muted-foreground" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">
+									{dashboardData.bookCount}
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Total books in inventory
+								</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">
+									Total Sales
+								</CardTitle>
+								<DollarSign className="h-4 w-4 text-muted-foreground" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">
+									{formatCurrency(dashboardData.monthlySales)}
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Cumulative sales amount
+								</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">
+									Total Orders
+								</CardTitle>
+								<ShoppingCart className="h-4 w-4 text-muted-foreground" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">
+									{dashboardData.orderCount}
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Completed transactions
+								</p>
+							</CardContent>
+						</Card>
+					</div>
+
+					{/* Recent Activity */}
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+						<Card className="col-span-4">
+							<CardHeader>
+								<CardTitle>Recent Orders</CardTitle>
+								<CardDescription>Latest billing transactions</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									{dashboardData.recentInvoices.length === 0 ? (
+										<p className="text-sm text-muted-foreground">
+											No recent orders found
+										</p>
+									) : (
+										dashboardData.recentInvoices.map((order) => (
+											<div
+												key={order.id}
+												className="flex items-center justify-between"
+											>
+												<div className="space-y-1">
+													<p className="text-sm font-medium">{order.id}</p>
+													<p className="text-sm text-muted-foreground">
+														{order.customer}
+													</p>
+												</div>
+												<div className="text-right">
+													<p className="text-sm font-medium">{order.amount}</p>
+													<Badge
+														variant={
+															order.status === "Completed"
+																? "default"
+																: order.status === "Pending"
+																? "secondary"
+																: "outline"
+														}
+													>
+														{order.status}
+													</Badge>
+												</div>
+											</div>
+										))
+									)}
+								</div>
+							</CardContent>
+						</Card>
+
+						<Card className="col-span-3">
+							<CardHeader>
+								<CardTitle>Quick Actions</CardTitle>
+								<CardDescription>Common tasks and shortcuts</CardDescription>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div className="grid gap-4">
+									<Card
+										className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+										onClick={() => handleQuickAction("new-bill")}
+									>
+										<div className="flex items-center gap-2">
+											<Receipt className="h-4 w-4" />
+											<span className="text-sm font-medium">
+												Create New Bill
+											</span>
+										</div>
+									</Card>
+									<Card
+										className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+										onClick={() => handleQuickAction("new-customer")}
+									>
+										<div className="flex items-center gap-2">
+											<Users className="h-4 w-4" />
+											<span className="text-sm font-medium">
+												Add New Customer
+											</span>
+										</div>
+									</Card>
+									<Card
+										className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+										onClick={() => handleQuickAction("new-book")}
+									>
+										<div className="flex items-center gap-2">
+											<Package className="h-4 w-4" />
+											<span className="text-sm font-medium">Add New Book</span>
+										</div>
+									</Card>
+									<Card
+										className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+										onClick={() => handleQuickAction("help")}
+									>
+										<div className="flex items-center gap-2">
+											<HelpCircle className="h-4 w-4" />
+											<span className="text-sm font-medium">
+												Help & Support
+											</span>
+										</div>
+									</Card>
+								</div>
+							</CardContent>
+						</Card>
+					</div>
+				</>
+			)}
+		</div>
+	);
+}

@@ -1,9 +1,21 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import {
+	BrowserRouter as Router,
+	Routes,
+	Route,
+	Navigate,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedLayout from "./layouts/ProtectedLayout";
+import AdminLayout from "./layouts/AdminLayout";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
+import CustomerManagement from "./pages/CustomerManagement";
+import ItemManagement from "./pages/ItemManagement";
+import BillingSystem from "./pages/BillingSystem";
+import BillManagement from "./pages/BillManagement";
+import HelpSection from "./pages/HelpSection";
+import { Toaster } from "./components/ui/toaster";
 
 const AuthRedirect = () => {
 	const { isAuthenticated, loading } = useAuth();
@@ -16,7 +28,9 @@ const AuthRedirect = () => {
 		);
 	}
 
-	return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+	return (
+		<Navigate to={isAuthenticated ? "/admin/dashboard" : "/login"} replace />
+	);
 };
 
 function App() {
@@ -28,16 +42,20 @@ function App() {
 
 					<Route path="/login" element={<LoginPage />} />
 
-					<Route
-						path="/dashboard"
-						element={
-							<ProtectedRoute>
-								<Dashboard />
-							</ProtectedRoute>
-						}
-					/>
+					<Route element={<ProtectedLayout />}>
+						<Route path="/admin" element={<AdminLayout />}>
+							<Route path="dashboard" element={<Dashboard />} />
+							<Route path="customers" element={<CustomerManagement />} />
+							<Route path="items" element={<ItemManagement />} />
+							<Route path="billing" element={<BillingSystem />} />
+							<Route path="bills" element={<BillManagement />} />
+							<Route path="help" element={<HelpSection />} />
+						</Route>
+					</Route>
+
 					{/* <Route path="*" element={<Navigate to="/404" />} /> */}
 				</Routes>
+				<Toaster />
 			</Router>
 		</AuthProvider>
 	);

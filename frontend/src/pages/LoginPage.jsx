@@ -70,7 +70,7 @@ const LoginPage = () => {
 			const result = await login(credentials);
 
 			if (result.success) {
-				navigate("/dashboard");
+				navigate("/admin/dashboard");
 			} else {
 				setErrors({ general: result.error });
 			}
