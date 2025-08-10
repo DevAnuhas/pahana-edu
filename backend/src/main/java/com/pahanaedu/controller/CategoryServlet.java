@@ -114,7 +114,7 @@ public class CategoryServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Create category object from JSON
             Category category = new Category();
@@ -213,7 +213,7 @@ public class CategoryServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Update category object from JSON
             if (jsonRequest.has("name") && !jsonRequest.get("name").getAsString().trim().isEmpty()) {

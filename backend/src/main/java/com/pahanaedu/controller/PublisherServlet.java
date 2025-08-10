@@ -114,7 +114,7 @@ public class PublisherServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Create publisher object from JSON
             Publisher publisher = new Publisher();
@@ -225,7 +225,7 @@ public class PublisherServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Update publisher object from JSON
             if (jsonRequest.has("name") && !jsonRequest.get("name").getAsString().trim().isEmpty()) {

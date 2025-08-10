@@ -139,7 +139,7 @@ public class BookServlet extends HttpServlet {
                 }
             }
 
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             Book book = new Book();
 
@@ -288,7 +288,7 @@ public class BookServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Update book object from JSON
             if (jsonRequest.has("title") && !jsonRequest.get("title").getAsString().trim().isEmpty()) {

@@ -175,7 +175,7 @@ public class InvoiceServlet extends HttpServlet {
                 }
             }
    
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             Invoice invoice = new Invoice();
 
@@ -405,7 +405,7 @@ public class InvoiceServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Create invoice object from JSON
             Invoice invoice = new Invoice();
@@ -544,7 +544,7 @@ public class InvoiceServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Create invoice object from JSON
             Invoice invoice = new Invoice();

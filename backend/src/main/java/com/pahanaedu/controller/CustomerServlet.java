@@ -136,7 +136,7 @@ public class CustomerServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Create customer object from JSON
             Customer customer = new Customer();
@@ -260,7 +260,7 @@ public class CustomerServlet extends HttpServlet {
             }
 
             // Parse JSON request
-            JsonObject jsonRequest = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            JsonObject jsonRequest = new JsonParser().parse(requestBody.toString()).getAsJsonObject();
 
             // Update customer object from JSON
             if (jsonRequest.has("name") && !jsonRequest.get("name").getAsString().trim().isEmpty()) {
