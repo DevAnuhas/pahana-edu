@@ -38,34 +38,26 @@ const billingAPI = {
 	},
 
 	createInvoice: async (invoiceData) => {
-		try {
-			const response = await fetch(`${apiClient.defaults.baseURL}/invoices`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				credentials: "include",
-				body: JSON.stringify(invoiceData),
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				console.error("Error creating invoice:", data);
+		return withRetry(async () => {
+			try {
+				const response = await apiClient.post("/invoices", invoiceData, {
+					withCredentials: true,
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+				return response.data;
+			} catch (error) {
+				console.error("Error creating invoice:", error);
 				return {
 					status: "error",
-					message: data.message || `Server returned status ${response.status}`,
+					message:
+						error.response?.data?.message ||
+						error.message ||
+						"Failed to create invoice",
 				};
 			}
-
-			return data;
-		} catch (error) {
-			console.error("Error in createInvoice:", error);
-			return {
-				status: "error",
-				message: error.message || "Failed to create invoice",
-			};
-		}
+		});
 	},
 
 	deleteInvoice: async (id) => {
