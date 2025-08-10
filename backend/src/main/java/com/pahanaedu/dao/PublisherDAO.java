@@ -127,21 +127,6 @@ public class PublisherDAO {
                 }
             }
 
-            // Also check for purchases from this publisher
-            String checkPurchasesSql = "SELECT COUNT(*) FROM purchases WHERE publisher_id = ?";
-
-            try (PreparedStatement checkPurchasesStmt = conn.prepareStatement(checkPurchasesSql)) {
-                checkPurchasesStmt.setInt(1, publisherId);
-
-                try (ResultSet rs = checkPurchasesStmt.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        // Publisher is in use in purchases, cannot delete
-                        LOGGER.log(Level.WARNING, "Cannot delete publisher ID " + publisherId + " as it is referenced in purchases");
-                        return false;
-                    }
-                }
-            }
-
             // If we get here, the publisher is not in use and can be deleted
             String sql = "DELETE FROM publishers WHERE id = ?";
 

@@ -334,7 +334,7 @@ public class PublisherServlet extends HttpServlet {
 
                 out.print(gson.toJson(jsonResponse));
             } else {
-                sendErrorResponse(response, "Failed to delete publisher. The publisher may be in use by books or purchases.");
+                sendErrorResponse(response, "Failed to delete publisher. The publisher may be in use by books.");
                 return;
             }
 
