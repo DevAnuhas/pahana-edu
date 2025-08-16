@@ -1,7 +1,6 @@
 package com.pahanaedu.controller;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,7 +13,6 @@ import java.io.PrintWriter;
 /**
  * Base API servlet that confirms the API is running
  */
-@WebServlet(name = "ApiServlet", urlPatterns = {"/api", "/api/"})
 public class ApiServlet extends HttpServlet {
 
     @Override

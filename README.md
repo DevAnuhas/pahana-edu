@@ -19,16 +19,18 @@ pahana-edu/
 │   │       └── webapp/WEB-INF/      # Web configuration
 │   └── pom.xml                      # Maven dependencies
 ├── frontend/                # React Vite Application
+│   ├── public/                      # Static assets
 │   ├── src/
 │   │   ├── components/              # Reusable UI components
 │   │   ├── pages/                   # Page components
+│   │   ├── layouts/                 # Layout components
 │   │   ├── services/                # API service layer
 │   │   ├── utils/                   # Utility functions
-│   │   ├── styles/                  # CSS/styling files
+│   │   ├── hooks/                   # Custom React hooks
+│   │   ├── lib/                     # Third-party libraries and configs
 │   │   └── App.jsx                  # Main application component
 │   └── package.json                 # Frontend dependencies
 ├── docs/                    # Project documentation
-├── scripts/                 # Build and deployment scripts
 ├── docker/                  # Docker configurations (optional)
 ├── .gitignore              # Git ignore rules
 ├── package.json            # Monorepo management
@@ -56,6 +58,12 @@ pahana-edu/
 - Order processing and management
 - Bill history and tracking
 
+### Help Section
+
+- User documentation and guides
+- FAQ and troubleshooting
+- System administration support
+
 ### User Interface
 
 - Modern React-based web interface
@@ -72,6 +80,7 @@ pahana-edu/
 - **React Router** - Client-side routing
 - **Axios** - HTTP client for API calls
 - **Tailwind CSS** - Responsive design
+- **Sonner** - Toast notification system
 
 ### Backend
 
@@ -80,6 +89,7 @@ pahana-edu/
 - **Apache Tomcat 7** - Application server
 - **Maven** - Build and dependency management
 - **Gson** - JSON processing
+- **JUnit** - Testing framework
 
 ### Database
 
@@ -92,7 +102,7 @@ pahana-edu/
 - **IntelliJ IDEA** - IDE
 - **GitHub Copilot** - AI-powered coding assistant
 - **Git** - Version control
-- **npm/Node.js** - Package management
+- **Maven & npm** - Package management
 
 ## Prerequisites
 
@@ -100,8 +110,6 @@ pahana-edu/
 - **Node.js 18+ and npm**
 - **Apache Tomcat 10.x**
 - **MySQL 8.0+**
-- **IntelliJ IDEA**
-- **Git**
 
 ## Quick Start
 
@@ -114,18 +122,19 @@ cd pahana-edu
 
 ### 2. Install Dependencies
 
+#### Frontend
 ```bash
-# Install all dependencies (root, frontend, backend)
-npm run install:all
+cd frontend
+npm install
 ```
 
-### 3. Database Setup
+#### Backend
+```bash
+cd backend
+mvn clean install
+```
 
-
-
-The database and tables will be automatically created at application startup through the [schema.sql](backend/src/main/resources/schema.sql) file. 
-
-### 4. Configure Database Connection
+### 3. Configure Database Connection
 
 Edit the [application.properties](backend/src/main/resources/application.properties) file with your database credentials:
 
@@ -135,11 +144,22 @@ app.datasource.username=root
 app.datasource.password=root1234
 ```
 
+### 4. Database Setup
+
+The database and tables will be automatically created at application startup through the [schema.sql](backend/src/main/resources/schema.sql) file. 
+
 ### 5. Start Development Servers
 
+#### Frontend
 ```bash
-# Start both frontend and backend servers
+cd frontend
 npm run dev
+```
+
+#### Backend
+```bash
+cd backend
+mvn tomcat:run
 ```
 
 The application will be available at:
@@ -147,33 +167,6 @@ The application will be available at:
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8080/api
 
-## Available Scripts
-
-### Monorepo Management
-
-```bash
-npm run dev              # Start both frontend and backend servers
-npm run build            # Build entire project for production
-npm run install:all      # Install dependencies for all projects
-npm run clean            # Clean all build artifacts and node_modules
-```
-
-### Individual Project Scripts
-
-```bash
-npm run dev:frontend     # Start only frontend dev server
-npm run dev:backend      # Start only backend server
-npm run build:frontend   # Build frontend for production
-npm run build:backend    # Build backend WAR file
-```
-
-### Testing
-
-```bash
-npm run test:frontend    # Run frontend tests
-npm run test:backend     # Run backend tests
-npm run test:all         # Run all tests
-```
 
 ## Development Workflow
 
@@ -198,35 +191,7 @@ chore: update React dependencies
 
 ## API Documentation
 
-### Authentication
-
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/profile` - Get user profile
-
-### Customer Management
-
-- `GET /api/customers` - Get all customers
-- `POST /api/customers` - Create new customer
-- `GET /api/customers/:id` - Get customer by ID
-- `PUT /api/customers/:id` - Update customer
-- `DELETE /api/customers/:id` - Delete customer
-
-### Item Management
-
-- `GET /api/items` - Get all items
-- `POST /api/items` - Create new item
-- `GET /api/items/:id` - Get item by ID
-- `PUT /api/items/:id` - Update item
-- `DELETE /api/items/:id` - Delete item
-
-### Order Management
-
-- `GET /api/orders` - Get all orders
-- `POST /api/orders` - Create new order
-- `GET /api/orders/:id` - Get order by ID
-- `PUT /api/orders/:id` - Update order
-- `DELETE /api/orders/:id` - Delete order
+For detailed API documentation, please refer to the [API Documentation](/docs/api-documentation.md) file.
 
 ## Testing
 
@@ -242,22 +207,24 @@ npm run test:e2e    # Run end-to-end tests
 
 ```bash
 cd backend
-mvn test           # Run unit tests
+mvn test             # Run unit tests
 mvn integration-test # Run integration tests
 ```
 
 ## Deployment
 
-### Development Environment
-
-```bash
-npm run dev
-```
-
 ### Production Build
 
+#### Frontend
 ```bash
+cd frontend
 npm run build
+```
+
+#### Backend
+```bash
+cd backend
+mvn package
 ```
 
 This creates:
