@@ -6,7 +6,6 @@ import com.pahanaedu.model.User;
 import com.pahanaedu.service.AuthService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +17,6 @@ import java.util.logging.Logger;
 /**
  * Servlet for handling user login
  */
-@WebServlet(name = "LoginServlet", urlPatterns = {"/api/auth/login"})
 public class LoginServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(LoginServlet.class.getName());
     private final Gson gson = new Gson();

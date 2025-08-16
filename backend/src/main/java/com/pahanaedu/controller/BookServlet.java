@@ -4,14 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.pahanaedu.model.Book;
-import com.pahanaedu.model.Category;
-import com.pahanaedu.model.Publisher;
 import com.pahanaedu.model.User;
 import com.pahanaedu.service.AuthService;
 import com.pahanaedu.service.BookService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +23,6 @@ import java.util.logging.Logger;
 /**
  * Controller for handling book-related API requests
  */
-@WebServlet(name = "BookServlet", urlPatterns = {"/api/books", "/api/books/*"})
 public class BookServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(BookServlet.class.getName());
     private final BookService bookService = new BookService();

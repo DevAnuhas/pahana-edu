@@ -9,7 +9,6 @@ import com.pahanaedu.service.AuthService;
 import com.pahanaedu.service.CustomerService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,7 +23,6 @@ import java.util.logging.Logger;
 /**
  * Controller for handling customer-related API requests
  */
-@WebServlet(name = "CustomerServlet", urlPatterns = {"/api/customers", "/api/customers/*"})
 public class CustomerServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(CustomerServlet.class.getName());
     private final CustomerService customerService = new CustomerService();

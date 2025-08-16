@@ -9,7 +9,6 @@ import com.pahanaedu.service.AuthService;
 import com.pahanaedu.service.BookService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,7 +22,6 @@ import java.util.logging.Logger;
 /**
  * Controller for handling publisher-related API requests
  */
-@WebServlet(name = "PublisherServlet", urlPatterns = {"/api/publishers", "/api/publishers/*"})
 public class PublisherServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(PublisherServlet.class.getName());
     private final BookService bookService = new BookService();

@@ -12,7 +12,6 @@ import com.pahanaedu.service.BillingService;
 import com.pahanaedu.service.BookService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +28,6 @@ import java.util.logging.Logger;
 /**
  * Controller for handling invoice and billing-related API requests
  */
-@WebServlet(name = "InvoiceServlet", urlPatterns = {"/api/invoices", "/api/invoices/*"})
 public class InvoiceServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(InvoiceServlet.class.getName());
     private final BillingService billingService = new BillingService();

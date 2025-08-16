@@ -159,7 +159,7 @@ npm run dev
 #### Backend
 ```bash
 cd backend
-mvn tomcat7:run
+mvn tomcat:run
 ```
 
 The application will be available at:
@@ -207,7 +207,7 @@ npm run test:e2e    # Run end-to-end tests
 
 ```bash
 cd backend
-mvn test           # Run unit tests
+mvn test             # Run unit tests
 mvn integration-test # Run integration tests
 ```
 
