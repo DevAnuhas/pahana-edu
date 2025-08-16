@@ -116,15 +116,15 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 INSERT INTO users (username, password, full_name, role, email)
 -- Password: admin1234
 VALUES
-('admin', '$2a$10$W9SVm2Fy3ziFLwuasTa.k.BzY95HYim8uHpiOGUfj57sM7j9sYhFK', 'System Administrator', 'ADMIN', 'admin@pahanaedu.com')
+('admin', 'o7VXRdJ9+T+AVqkJIaCkZA==:7dkfWdM+GgDdMyvVArJTaApO8/fWQZXhpapq71BzDi9JwF8FSbzXnsbJYPX3O1bjLXBcOe1jkVnNJSJgVTviNQ==', 'System Administrator', 'ADMIN', 'admin@pahanaedu.com')
 ON DUPLICATE KEY UPDATE username = 'admin';
 
 -- Insert demo users (cashiers)
 INSERT INTO users (username, password, full_name, role, email)
 VALUES
 -- Password: staff1234
-('staff1', '$2a$10$O5LhfbyITmiFIgpLOyNiZuFameXDzacdmk/SzrSpoCuADtragtZhC', 'Nishanth Perera', 'CASHIER', 'nishanth@pahanaedu.com'),
-('staff2', '$2a$10$O5LhfbyITmiFIgpLOyNiZuFameXDzacdmk/SzrSpoCuADtragtZhC', 'Dilhani Silva', 'CASHIER', 'dilhani@pahanaedu.com')
+('staff1', 'DBAz2Bl/B+oZ/aoDEbyYCg==:R6GqmvQry8tlQ22bZrdFZwa1Nyt+/h08DxFGxyFhYbiZszzZBlb+KgmUKsawjCVsWmNaBVxc2ZxFJ2VsLRQ1wg==', 'Nishanth Perera', 'CASHIER', 'nishanth@pahanaedu.com'),
+('staff2', 'DBAz2Bl/B+oZ/aoDEbyYCg==:R6GqmvQry8tlQ22bZrdFZwa1Nyt+/h08DxFGxyFhYbiZszzZBlb+KgmUKsawjCVsWmNaBVxc2ZxFJ2VsLRQ1wg==', 'Dilhani Silva', 'CASHIER', 'dilhani@pahanaedu.com')
 ON DUPLICATE KEY UPDATE username = VALUES(username);
 
 -- Insert default categories

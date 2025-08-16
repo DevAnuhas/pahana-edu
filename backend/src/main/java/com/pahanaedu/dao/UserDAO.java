@@ -2,7 +2,7 @@ package com.pahanaedu.dao;
 
 import com.pahanaedu.model.User;
 import com.pahanaedu.utils.DatabaseConnection;
-import org.mindrot.jbcrypt.BCrypt;
+import com.pahanaedu.utils.PasswordHasher;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class UserDAO {
 
         if (user != null) {
             boolean isPasswordValid = verifyPassword(password, user.getPassword());
-            
+
             if (isPasswordValid) {
                 user.setPassword(null);
                 return user;
@@ -79,21 +79,17 @@ public class UserDAO {
         if (dbPassword == null || userPassword == null) {
             return false;
         }
-        
+
         try {
-            return BCrypt.checkpw(userPassword, dbPassword);
+            return PasswordHasher.verify(userPassword, dbPassword);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error verifying password", e);
             return false;
         }
     }
-    
-    /**
-     * Hash a password using BCrypt with salt rounds 10
-     * This method can be used for user registration or password updates
-     */
+
     public String hashPassword(String plainPassword) {
-        return BCrypt.hashpw(plainPassword, BCrypt.gensalt(10));
+        return PasswordHasher.hash(plainPassword);
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
