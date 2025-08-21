@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,12 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const BillingSystem = () => {
 	const [customers, setCustomers] = useState([]);
 	const [books, setBooks] = useState([]);
-	const [selectedCustomer, setSelectedCustomer] = useState("");
 	const [billItems, setBillItems] = useState([]);
-	const [selectedBook, setSelectedBook] = useState("");
-	const [quantity, setQuantity] = useState(1);
-	const [discount, setDiscount] = useState(0);
-	const [applyTax, setApplyTax] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isPrinting, setIsPrinting] = useState(false);
@@ -50,6 +48,46 @@ const BillingSystem = () => {
 	const [printContent, setPrintContent] = useState("");
 
 	const { user } = useAuth();
+
+	// react-hook-form + zod schema for billing fields
+	const billFormSchema = z.object({
+		selectedCustomer: z.string().min(1, "Please select a customer"),
+		selectedBook: z.string().optional(),
+		quantity: z.preprocess(
+			(val) => (val === "" ? undefined : Number(val)),
+			z.number().int().min(1, "Quantity must be at least 1")
+		),
+		discount: z.preprocess(
+			(val) => (val === "" ? undefined : Number(val)),
+			z
+				.number()
+				.min(0, "Discount must be >= 0")
+				.max(100, "Discount must be <= 100")
+		),
+		applyTax: z.boolean().optional(),
+	});
+
+	const {
+		register,
+		control,
+		handleSubmit,
+		setValue,
+		getValues,
+		watch,
+		trigger,
+	} = useForm({
+		resolver: zodResolver(billFormSchema),
+		mode: "onChange",
+		defaultValues: {
+			selectedCustomer: "",
+			selectedBook: "",
+			quantity: 1,
+			discount: 0,
+			applyTax: true,
+		},
+	});
+
+	watch("applyTax", true); // keep watch so applyTax checkbox updates live
 
 	const subtotal = billItems.reduce(
 		(sum, item) => sum + item.price * item.quantity,
@@ -61,7 +99,7 @@ const BillingSystem = () => {
 		0
 	);
 
-	const tax = applyTax ? (subtotal - totalDiscount) * 0.05 : 0; // 5% tax
+	const tax = watch("applyTax") ? (subtotal - totalDiscount) * 0.05 : 0; // 5% tax
 	const grandTotal = subtotal - totalDiscount + tax;
 
 	// Generate invoice number
@@ -107,6 +145,11 @@ const BillingSystem = () => {
 	};
 
 	const addItemToBill = () => {
+		const values = getValues();
+		const selectedBook = values.selectedBook;
+		const quantity = Number(values.quantity) || 1;
+		const discount = Number(values.discount) || 0;
+
 		if (!selectedBook) {
 			showToast.error("Please select a book to add");
 			return;
@@ -136,16 +179,18 @@ const BillingSystem = () => {
 		};
 
 		setBillItems([...billItems, newItem]);
-		setSelectedBook("");
-		setQuantity(1);
-		setDiscount(0);
+		setValue("selectedBook", "");
+		setValue("quantity", 1);
+		setValue("discount", 0);
 	};
 
 	const removeItem = (id) => {
 		setBillItems(billItems.filter((item) => item.id !== id));
 	};
 
-	const handleSaveBill = async () => {
+	const handleSaveBill = async (formValues) => {
+		const selectedCustomer =
+			formValues.selectedCustomer || getValues("selectedCustomer");
 		if (!selectedCustomer || billItems.length === 0) {
 			showToast.error("Please select a customer and add items to the bill");
 			return;
@@ -220,7 +265,7 @@ const BillingSystem = () => {
 					second: "2-digit",
 					hour12: true,
 				}),
-				applyTax: applyTax,
+				applyTax: !!getValues("applyTax"),
 				notes: "Created via Billing System",
 			};
 
@@ -242,7 +287,8 @@ const BillingSystem = () => {
 					setPrintDialogOpen(true);
 
 					// Reset the form
-					setSelectedCustomer("");
+					// reset the customer field in the form
+					setValue("selectedCustomer", "");
 					setBillItems([]);
 					setInvoiceNumber(billingAPI.generateInvoiceNumber());
 				} else {
@@ -282,7 +328,9 @@ const BillingSystem = () => {
 		}
 	};
 
-	const handlePrintBill = async () => {
+	const handlePrintBill = async (formValues) => {
+		const selectedCustomer =
+			formValues.selectedCustomer || getValues("selectedCustomer");
 		if (!selectedCustomer || billItems.length === 0) {
 			showToast.error("Please select a customer and add items to the bill");
 			return;
@@ -321,7 +369,7 @@ const BillingSystem = () => {
 					second: "2-digit",
 					hour12: true,
 				}),
-				applyTax: applyTax,
+				applyTax: !!getValues("applyTax"),
 				notes: "Created via Billing System",
 			};
 
@@ -380,24 +428,30 @@ const BillingSystem = () => {
 							<CardContent className="space-y-4">
 								<div className="space-y-2">
 									<Label htmlFor="customer">Select Customer</Label>
-									<Select
-										value={selectedCustomer}
-										onValueChange={setSelectedCustomer}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Choose a customer" />
-										</SelectTrigger>
-										<SelectContent>
-											{customers.map((customer) => (
-												<SelectItem
-													key={customer.id}
-													value={customer.id.toString()}
-												>
-													{customer.accountNumber} - {customer.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+									<Controller
+										control={control}
+										name="selectedCustomer"
+										render={({ field }) => (
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger>
+													<SelectValue placeholder="Choose a customer" />
+												</SelectTrigger>
+												<SelectContent>
+													{customers.map((customer) => (
+														<SelectItem
+															key={customer.id}
+															value={customer.id.toString()}
+														>
+															{customer.accountNumber} - {customer.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+									/>
 								</div>
 
 								<Separator />
@@ -408,26 +462,32 @@ const BillingSystem = () => {
 									<div className="grid gap-4">
 										<div className="space-y-2">
 											<Label htmlFor="book">Select Book</Label>
-											<Select
-												value={selectedBook}
-												onValueChange={setSelectedBook}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Choose a book" />
-												</SelectTrigger>
-												<SelectContent>
-													{books.map((book) => (
-														<SelectItem
-															key={book.id}
-															value={book.id.toString()}
-															disabled={book.stockQuantity < 1}
-														>
-															{book.title} - {formatCurrency(book.price)}{" "}
-															{book.stockQuantity < 1 && "(Out of Stock)"}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
+											<Controller
+												control={control}
+												name="selectedBook"
+												render={({ field }) => (
+													<Select
+														value={field.value}
+														onValueChange={field.onChange}
+													>
+														<SelectTrigger>
+															<SelectValue placeholder="Choose a book" />
+														</SelectTrigger>
+														<SelectContent>
+															{books.map((book) => (
+																<SelectItem
+																	key={book.id}
+																	value={book.id.toString()}
+																	disabled={book.stockQuantity < 1}
+																>
+																	{book.title} - {formatCurrency(book.price)}{" "}
+																	{book.stockQuantity < 1 && "(Out of Stock)"}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												)}
+											/>
 										</div>
 
 										<div className="grid grid-cols-3 gap-2">
@@ -437,10 +497,7 @@ const BillingSystem = () => {
 													id="quantity"
 													type="number"
 													min="1"
-													value={quantity}
-													onChange={(e) =>
-														setQuantity(parseInt(e.target.value) || 1)
-													}
+													{...register("quantity")}
 												/>
 											</div>
 											<div className="space-y-2">
@@ -450,15 +507,22 @@ const BillingSystem = () => {
 													type="number"
 													min="0"
 													max="100"
-													value={discount}
-													onChange={(e) =>
-														setDiscount(parseInt(e.target.value) || 0)
-													}
+													{...register("discount")}
 												/>
 											</div>
 											<div className="space-y-2">
 												<Label>&nbsp;</Label>
-												<Button onClick={addItemToBill} className="w-full">
+												<Button
+													onClick={async () => {
+														const ok = await trigger([
+															"selectedBook",
+															"quantity",
+															"discount",
+														]);
+														if (ok) addItemToBill();
+													}}
+													className="w-full"
+												>
 													<Plus className="mr-2 h-4 w-4" />
 													Add
 												</Button>
@@ -476,13 +540,14 @@ const BillingSystem = () => {
 								<CardDescription>Invoice: {invoiceNumber}</CardDescription>
 							</CardHeader>
 							<CardContent>
-								{selectedCustomer && (
+								{getValues("selectedCustomer") && (
 									<div className="mb-4 p-3 bg-muted rounded-lg">
 										<p className="font-medium">
 											Customer:{" "}
 											{
 												customers.find(
-													(c) => c.id.toString() === selectedCustomer
+													(c) =>
+														c.id.toString() === getValues("selectedCustomer")
 												)?.name
 											}
 										</p>
@@ -490,7 +555,8 @@ const BillingSystem = () => {
 											Account:{" "}
 											{
 												customers.find(
-													(c) => c.id.toString() === selectedCustomer
+													(c) =>
+														c.id.toString() === getValues("selectedCustomer")
 												)?.accountNumber
 											}
 										</p>
@@ -513,8 +579,7 @@ const BillingSystem = () => {
 												<input
 													type="checkbox"
 													id="applyTax"
-													checked={applyTax}
-													onChange={(e) => setApplyTax(e.target.checked)}
+													{...register("applyTax")}
 													className="rounded border-gray-300"
 												/>
 												<Label htmlFor="applyTax" className="text-xs">
@@ -532,7 +597,7 @@ const BillingSystem = () => {
 
 									<div className="flex gap-2">
 										<Button
-											onClick={handleSaveBill}
+											onClick={handleSubmit(handleSaveBill)}
 											className="flex-1"
 											disabled={isSaving || billItems.length === 0}
 										>
@@ -549,7 +614,7 @@ const BillingSystem = () => {
 											)}
 										</Button>
 										<Button
-											onClick={handlePrintBill}
+											onClick={handleSubmit(handlePrintBill)}
 											variant="outline"
 											className="flex-1"
 											disabled={isPrinting || billItems.length === 0}

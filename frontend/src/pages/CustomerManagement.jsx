@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
 	Card,
 	CardContent,
@@ -50,16 +53,39 @@ export default function CustomerManagement() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
-	const [formData, setFormData] = useState({
-		accountNumber: "",
-		name: "",
-		address: "",
-		telephone: "",
-		email: "",
-		registrationDate: new Date().toISOString().split("T")[0],
+	// Zod schema + react-hook-form
+	const customerSchema = z.object({
+		accountNumber: z.string().min(1, "Account number is required"),
+		name: z.string().min(1, "Name is required"),
+		address: z.string().min(1, "Address is required"),
+		telephone: z.string().min(1, "Telephone is required"),
+		email: z
+			.string()
+			.email("Invalid email format")
+			.optional()
+			.or(z.literal("")),
+		registrationDate: z.string().min(1, "Registration date is required"),
 	});
 
-	const [formErrors, setFormErrors] = useState({});
+	const today = new Date().toISOString().split("T")[0];
+
+	const {
+		register,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(customerSchema),
+		mode: "onChange",
+		defaultValues: {
+			accountNumber: "",
+			name: "",
+			address: "",
+			telephone: "",
+			email: "",
+			registrationDate: today,
+		},
+	});
 
 	useEffect(() => {
 		fetchCustomers();
@@ -98,54 +124,24 @@ export default function CustomerManagement() {
 		setSearchTerm(e.target.value);
 	};
 
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setFormData({
-			...formData,
-			[name]: value,
-		});
-
-		if (formErrors[name]) {
-			setFormErrors({
-				...formErrors,
-				[name]: "",
-			});
-		}
-	};
-
-	const validateForm = () => {
-		const errors = {};
-		if (!formData.accountNumber)
-			errors.accountNumber = "Account number is required";
-		if (!formData.name) errors.name = "Name is required";
-		if (!formData.address) errors.address = "Address is required";
-		if (!formData.telephone) errors.telephone = "Telephone is required";
-		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
-			errors.email = "Invalid email format";
-		if (!formData.registrationDate)
-			errors.registrationDate = "Registration date is required";
-
-		setFormErrors(errors);
-		return Object.keys(errors).length === 0;
-	};
+	// manual input handlers & validation removed - using react-hook-form + zod
 
 	const openAddDialog = () => {
 		setSelectedCustomer(null);
-		setFormData({
+		reset({
 			accountNumber: "",
 			name: "",
 			address: "",
 			telephone: "",
 			email: "",
-			registrationDate: new Date().toISOString().split("T")[0],
+			registrationDate: today,
 		});
-		setFormErrors({});
 		setIsAddDialogOpen(true);
 	};
 
 	const openEditDialog = (customer) => {
 		setSelectedCustomer(customer);
-		setFormData({
+		reset({
 			accountNumber: customer.accountNumber,
 			name: customer.name,
 			address: customer.address,
@@ -153,9 +149,8 @@ export default function CustomerManagement() {
 			email: customer.email || "",
 			registrationDate: customer.registrationDate
 				? new Date(customer.registrationDate).toISOString().split("T")[0]
-				: new Date().toISOString().split("T")[0],
+				: today,
 		});
-		setFormErrors({});
 		setIsAddDialogOpen(true);
 	};
 
@@ -164,20 +159,18 @@ export default function CustomerManagement() {
 		setIsDeleteDialogOpen(true);
 	};
 
-	const handleSave = async () => {
-		if (!validateForm()) return;
-
+	const onSubmit = async (data) => {
 		setIsSaving(true);
 		try {
 			if (selectedCustomer) {
 				const updatedCustomer = {
 					...selectedCustomer,
-					...formData,
+					...data,
 				};
 				await customerAPI.updateCustomer(selectedCustomer.id, updatedCustomer);
 				showToast.success("Customer updated successfully");
 			} else {
-				await customerAPI.createCustomer(formData);
+				await customerAPI.createCustomer(data);
 				showToast.success("Customer created successfully");
 			}
 
@@ -349,16 +342,14 @@ export default function CustomerManagement() {
 							<Label htmlFor="accountNumber">Account Number</Label>
 							<Input
 								id="accountNumber"
-								name="accountNumber"
-								value={formData.accountNumber}
-								onChange={handleInputChange}
+								{...register("accountNumber")}
 								placeholder="Enter account number"
 								className="col-span-3"
-								disabled={selectedCustomer}
+								disabled={!!selectedCustomer}
 							/>
-							{formErrors.accountNumber && (
+							{errors.accountNumber && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.accountNumber}
+									{errors.accountNumber.message}
 								</p>
 							)}
 						</div>
@@ -367,15 +358,13 @@ export default function CustomerManagement() {
 							<Label htmlFor="name">Name</Label>
 							<Input
 								id="name"
-								name="name"
-								value={formData.name}
-								onChange={handleInputChange}
+								{...register("name")}
 								placeholder="Enter customer name"
 								className="col-span-3"
 							/>
-							{formErrors.name && (
+							{errors.name && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.name}
+									{errors.name.message}
 								</p>
 							)}
 						</div>
@@ -384,15 +373,13 @@ export default function CustomerManagement() {
 							<Label htmlFor="address">Address</Label>
 							<Input
 								id="address"
-								name="address"
-								value={formData.address}
-								onChange={handleInputChange}
+								{...register("address")}
 								placeholder="Enter address"
 								className="col-span-3"
 							/>
-							{formErrors.address && (
+							{errors.address && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.address}
+									{errors.address.message}
 								</p>
 							)}
 						</div>
@@ -401,15 +388,13 @@ export default function CustomerManagement() {
 							<Label htmlFor="telephone">Telephone</Label>
 							<Input
 								id="telephone"
-								name="telephone"
-								value={formData.telephone}
-								onChange={handleInputChange}
+								{...register("telephone")}
 								placeholder="Enter telephone number"
 								className="col-span-3"
 							/>
-							{formErrors.telephone && (
+							{errors.telephone && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.telephone}
+									{errors.telephone.message}
 								</p>
 							)}
 						</div>
@@ -418,15 +403,13 @@ export default function CustomerManagement() {
 							<Label htmlFor="email">Email (Optional)</Label>
 							<Input
 								id="email"
-								name="email"
-								value={formData.email}
-								onChange={handleInputChange}
+								{...register("email")}
 								placeholder="Enter email address"
 								className="col-span-3"
 							/>
-							{formErrors.email && (
+							{errors.email && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.email}
+									{errors.email.message}
 								</p>
 							)}
 						</div>
@@ -436,14 +419,12 @@ export default function CustomerManagement() {
 							<Input
 								id="registrationDate"
 								type="date"
-								name="registrationDate"
-								value={formData.registrationDate}
-								onChange={handleInputChange}
+								{...register("registrationDate")}
 								className="col-span-3"
 							/>
-							{formErrors.registrationDate && (
+							{errors.registrationDate && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.registrationDate}
+									{errors.registrationDate.message}
 								</p>
 							)}
 						</div>
@@ -456,7 +437,7 @@ export default function CustomerManagement() {
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleSave} disabled={isSaving}>
+						<Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
 							{isSaving ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />

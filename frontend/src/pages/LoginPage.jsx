@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,59 +15,32 @@ import {
 } from "@/components/ui/form";
 
 const LoginPage = () => {
-	const [formData, setFormData] = useState({
-		username: "",
-		password: "",
-	});
-	const [errors, setErrors] = useState({});
 	const [isLoading, setIsLoading] = useState(false);
+	const [generalError, setGeneralError] = useState("");
+
+	const loginSchema = z.object({
+		username: z.string().min(1, "Username is required"),
+		password: z.string().min(1, "Password is required"),
+	});
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(loginSchema),
+		mode: "onChange",
+	});
 	const { login } = useAuth();
 	const navigate = useNavigate();
 
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setFormData((prev) => ({
-			...prev,
-
-			[name]: value,
-		}));
-		// Clear error when user starts typing
-		if (errors[name]) {
-			setErrors((prev) => ({
-				...prev,
-				[name]: "",
-			}));
-		}
-	};
-
-	const validateForm = () => {
-		const newErrors = {};
-
-		if (!formData.username.trim()) {
-			newErrors.username = "Username is required";
-		}
-
-		if (!formData.password) {
-			newErrors.password = "Password is required";
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
-
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-
-		if (!validateForm()) {
-			return;
-		}
-
+	const onSubmit = async (values) => {
+		setGeneralError("");
 		setIsLoading(true);
-
 		try {
 			const credentials = {
-				username: formData.username,
-				password: formData.password,
+				username: values.username,
+				password: values.password,
 			};
 
 			const result = await login(credentials);
@@ -72,11 +48,11 @@ const LoginPage = () => {
 			if (result.success) {
 				navigate("/admin/dashboard");
 			} else {
-				setErrors({ general: result.error });
+				setGeneralError(result.error || "Invalid credentials");
 			}
 		} catch (error) {
 			console.error("Login error:", error);
-			setErrors({ general: "An unexpected error occurred. Please try again." });
+			setGeneralError("An unexpected error occurred. Please try again.");
 		} finally {
 			setIsLoading(false);
 		}
@@ -92,10 +68,10 @@ const LoginPage = () => {
 					<p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
 				</div>
 
-				<Form onSubmit={handleSubmit} className="mt-8 space-y-6">
-					{errors.general && (
+				<Form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+					{generalError && (
 						<div className="rounded-md bg-red-50 p-4">
-							<div className="text-sm text-red-800">{errors.general}</div>
+							<div className="text-sm text-red-800">{generalError}</div>
 						</div>
 					)}
 
@@ -104,17 +80,16 @@ const LoginPage = () => {
 						<FormControl>
 							<Input
 								id="username"
-								name="username"
+								{...register("username")}
 								type="text"
 								autoComplete="username"
-								required
-								value={formData.username}
-								onChange={handleInputChange}
-								className={errors.username ? "border-red-500" : ""}
 								placeholder="Enter your username"
+								className={errors.username ? "border-red-500" : ""}
 							/>
 						</FormControl>
-						{errors.username && <FormMessage>{errors.username}</FormMessage>}
+						{errors.username && (
+							<FormMessage>{errors.username.message}</FormMessage>
+						)}
 					</FormItem>
 
 					<FormItem>
@@ -122,17 +97,16 @@ const LoginPage = () => {
 						<FormControl>
 							<Input
 								id="password"
-								name="password"
+								{...register("password")}
 								type="password"
 								autoComplete="current-password"
-								required
-								value={formData.password}
-								onChange={handleInputChange}
-								className={errors.password ? "border-red-500" : ""}
 								placeholder="Enter your password"
+								className={errors.password ? "border-red-500" : ""}
 							/>
 						</FormControl>
-						{errors.password && <FormMessage>{errors.password}</FormMessage>}
+						{errors.password && (
+							<FormMessage>{errors.password.message}</FormMessage>
+						)}
 					</FormItem>
 
 					<Button type="submit" className="w-full" disabled={isLoading}>
