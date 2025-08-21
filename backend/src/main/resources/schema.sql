@@ -142,7 +142,7 @@ INSERT INTO publishers (name, contact_person, telephone, email, address)
 VALUES
     ('Academic Press', 'John Williams', '0112847561', 'info@academicpress.com', '123 University Road, Colombo 7'),
     ('Lanka Publications', 'Kumari Silva', '0772568941', 'kumari@lankapub.lk', '45 Temple Road, Kandy'),
-    ('Children\'s Books Lanka', 'Amal Perera', '0812365478', 'amal@childrenbooks.lk', '78 Hill Street, Nuwara Eliya'),
+    ('Children Books Lanka', 'Amal Perera', '0812365478', 'amal@childrenbooks.lk', '78 Hill Street, Nuwara Eliya'),
     ('Business Knowledge Ltd', 'Dinesh Fernando', '0114589632', 'sales@businessknowledge.lk', '256 Galle Road, Colombo 3'),
     ('Serendib Publishing', 'Malini Gunawardena', '0765478123', 'contact@serendibpub.com', '32 Beach Road, Negombo')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
@@ -207,3 +207,295 @@ VALUES
     (8, 1, 1, 2500.00, 10.00, 2250.00),
     (8, 9, 1, 2200.00, 10.00, 1980.00),
     (8, 3, 1, 1200.00, 20.00, 960.00);
+
+    
+-- =====================================================
+-- DATABASE TRIGGERS FOR BUSINESS RULE ENFORCEMENT
+-- =====================================================
+
+-- Trigger to automatically update book stock when invoice items are added
+DELIMITER $$
+
+CREATE TRIGGER tr_update_stock_on_sale
+    AFTER INSERT ON invoice_items
+    FOR EACH ROW
+BEGIN
+    -- Update book stock by reducing the sold quantity
+    UPDATE books 
+    SET stock_quantity = stock_quantity - NEW.quantity,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.book_id;
+    
+    -- Check if stock goes negative and raise error if insufficient stock
+    IF (SELECT stock_quantity FROM books WHERE id = NEW.book_id) < 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Insufficient stock for this book. Transaction cannot be completed.';
+    END IF;
+END$$
+
+-- Trigger to restore stock when invoice items are deleted (returns/cancellations)
+CREATE TRIGGER tr_restore_stock_on_return
+    AFTER DELETE ON invoice_items
+    FOR EACH ROW
+BEGIN
+    -- Restore book stock by adding back the returned quantity
+    UPDATE books 
+    SET stock_quantity = stock_quantity + OLD.quantity,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = OLD.book_id;
+END$$
+
+-- Trigger to handle stock adjustments when invoice items are updated
+CREATE TRIGGER tr_adjust_stock_on_update
+    AFTER UPDATE ON invoice_items
+    FOR EACH ROW
+BEGIN
+    -- Calculate the difference in quantity
+    DECLARE quantity_diff INT;
+    SET quantity_diff = NEW.quantity - OLD.quantity;
+    
+    -- Adjust stock based on quantity difference
+    UPDATE books 
+    SET stock_quantity = stock_quantity - quantity_diff,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.book_id;
+    
+    -- Check if stock goes negative
+    IF (SELECT stock_quantity FROM books WHERE id = NEW.book_id) < 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Insufficient stock for this quantity adjustment.';
+    END IF;
+END$$
+
+-- Trigger to validate invoice item calculations
+CREATE TRIGGER tr_validate_invoice_item_calculations
+    BEFORE INSERT ON invoice_items
+    FOR EACH ROW
+BEGIN
+    DECLARE calculated_total DECIMAL(10,2);
+    
+    -- Calculate the expected total price
+    SET calculated_total = NEW.unit_price * NEW.quantity * (1 - NEW.discount_percent / 100);
+    
+    -- Validate the total price calculation
+    IF ABS(NEW.total_price - calculated_total) > 0.01 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Invoice item total price calculation is incorrect.';
+    END IF;
+    
+    -- Ensure quantity is positive
+    IF NEW.quantity <= 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Quantity must be greater than zero.';
+    END IF;
+    
+    -- Ensure unit price is positive
+    IF NEW.unit_price <= 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Unit price must be greater than zero.';
+    END IF;
+    
+    -- Validate discount percentage
+    IF NEW.discount_percent < 0 OR NEW.discount_percent > 100 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Discount percentage must be between 0 and 100.';
+    END IF;
+END$$
+
+-- Trigger to automatically calculate invoice totals
+CREATE TRIGGER tr_calculate_invoice_totals
+    AFTER INSERT ON invoice_items
+    FOR EACH ROW
+BEGIN
+    DECLARE calculated_subtotal DECIMAL(10,2);
+    DECLARE calculated_total DECIMAL(10,2);
+    
+    -- Calculate subtotal from all invoice items
+    SELECT COALESCE(SUM(total_price), 0) INTO calculated_subtotal
+    FROM invoice_items 
+    WHERE invoice_id = NEW.invoice_id;
+    
+    -- Calculate final total (subtotal - discount + tax)
+    SELECT (calculated_subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0)) 
+    INTO calculated_total
+    FROM invoices 
+    WHERE id = NEW.invoice_id;
+    
+    -- Update invoice with calculated totals
+    UPDATE invoices 
+    SET subtotal = calculated_subtotal,
+        total_amount = calculated_total
+    WHERE id = NEW.invoice_id;
+END$$
+
+-- Trigger to recalculate invoice totals when items are updated
+CREATE TRIGGER tr_recalculate_invoice_totals_on_update
+    AFTER UPDATE ON invoice_items
+    FOR EACH ROW
+BEGIN
+    DECLARE calculated_subtotal DECIMAL(10,2);
+    DECLARE calculated_total DECIMAL(10,2);
+    
+    -- Calculate subtotal from all invoice items
+    SELECT COALESCE(SUM(total_price), 0) INTO calculated_subtotal
+    FROM invoice_items 
+    WHERE invoice_id = NEW.invoice_id;
+    
+    -- Calculate final total
+    SELECT (calculated_subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0)) 
+    INTO calculated_total
+    FROM invoices 
+    WHERE id = NEW.invoice_id;
+    
+    -- Update invoice with recalculated totals
+    UPDATE invoices 
+    SET subtotal = calculated_subtotal,
+        total_amount = calculated_total
+    WHERE id = NEW.invoice_id;
+END$$
+
+-- Trigger to recalculate invoice totals when items are deleted
+CREATE TRIGGER tr_recalculate_invoice_totals_on_delete
+    AFTER DELETE ON invoice_items
+    FOR EACH ROW
+BEGIN
+    DECLARE calculated_subtotal DECIMAL(10,2);
+    DECLARE calculated_total DECIMAL(10,2);
+    
+    -- Calculate subtotal from remaining invoice items
+    SELECT COALESCE(SUM(total_price), 0) INTO calculated_subtotal
+    FROM invoice_items 
+    WHERE invoice_id = OLD.invoice_id;
+    
+    -- Calculate final total
+    SELECT (calculated_subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0)) 
+    INTO calculated_total
+    FROM invoices 
+    WHERE id = OLD.invoice_id;
+    
+    -- Update invoice with recalculated totals
+    UPDATE invoices 
+    SET subtotal = calculated_subtotal,
+        total_amount = calculated_total
+    WHERE id = OLD.invoice_id;
+END$$
+
+-- Trigger to prevent deletion of books that have been sold
+CREATE TRIGGER tr_prevent_book_deletion_if_sold
+    BEFORE DELETE ON books
+    FOR EACH ROW
+BEGIN
+    DECLARE sold_count INT;
+    
+    -- Check if book has been sold
+    SELECT COUNT(*) INTO sold_count
+    FROM invoice_items 
+    WHERE book_id = OLD.id;
+    
+    IF sold_count > 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Cannot delete book that has been sold. Consider marking as inactive instead.';
+    END IF;
+END$$
+
+-- Trigger to validate customer account number format
+CREATE TRIGGER tr_validate_customer_account_format
+    BEFORE INSERT ON customers
+    FOR EACH ROW
+BEGIN
+    -- Validate account number format (must start with 'CUS' followed by 3 digits)
+    IF NEW.account_number NOT REGEXP '^CUS[0-9]{3}$' THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Customer account number must follow format: CUS###';
+    END IF;
+    
+    -- Validate telephone number format (Sri Lankan format)
+    IF NEW.telephone NOT REGEXP '^07[0-9]{8}$' THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Telephone number must be in Sri Lankan format: 07########';
+    END IF;
+END$$
+
+-- Trigger to generate unique invoice numbers
+CREATE TRIGGER tr_generate_invoice_number
+    BEFORE INSERT ON invoices
+    FOR EACH ROW
+BEGIN
+    DECLARE next_number INT;
+    DECLARE year_part VARCHAR(4);
+    DECLARE new_invoice_number VARCHAR(20);
+    
+    -- Get current year
+    SET year_part = YEAR(CURRENT_DATE);
+    
+    -- Get next invoice number for the year
+    SELECT COALESCE(MAX(CAST(SUBSTRING(invoice_number, 10) AS UNSIGNED)), 0) + 1 
+    INTO next_number
+    FROM invoices 
+    WHERE invoice_number LIKE CONCAT('INV-', year_part, '-%');
+    
+    -- Generate new invoice number
+    SET new_invoice_number = CONCAT('INV-', year_part, '-', LPAD(next_number, 3, '0'));
+    
+    -- Set the generated invoice number if not provided
+    IF NEW.invoice_number IS NULL OR NEW.invoice_number = '' THEN
+        SET NEW.invoice_number = new_invoice_number;
+    END IF;
+END$$
+
+-- Trigger to log stock level warnings
+CREATE TRIGGER tr_stock_level_warning
+    AFTER UPDATE ON books
+    FOR EACH ROW
+BEGIN
+    -- Log warning when stock falls below minimum threshold (5 books)
+    IF NEW.stock_quantity <= 5 AND NEW.stock_quantity > 0 THEN
+        INSERT INTO stock_alerts (book_id, alert_type, message, created_at)
+        VALUES (NEW.id, 'LOW_STOCK', 
+                CONCAT('Stock level for "', NEW.title, '" is low: ', NEW.stock_quantity, ' remaining'), 
+                CURRENT_TIMESTAMP);
+    END IF;
+    
+    -- Log critical warning when stock is depleted
+    IF NEW.stock_quantity = 0 THEN
+        INSERT INTO stock_alerts (book_id, alert_type, message, created_at)
+        VALUES (NEW.id, 'OUT_OF_STOCK', 
+                CONCAT('Book "', NEW.title, '" is out of stock'), 
+                CURRENT_TIMESTAMP);
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Create stock alerts table for tracking inventory warnings
+CREATE TABLE IF NOT EXISTS stock_alerts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT NOT NULL,
+    alert_type ENUM('LOW_STOCK', 'OUT_OF_STOCK', 'RESTOCK_NEEDED') NOT NULL,
+    message TEXT NOT NULL,
+    is_resolved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    INDEX idx_stock_alerts_book_id (book_id),
+    INDEX idx_stock_alerts_type (alert_type),
+    INDEX idx_stock_alerts_resolved (is_resolved)
+);
+
+-- Create audit log table for tracking important database changes
+CREATE TABLE IF NOT EXISTS audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    table_name VARCHAR(50) NOT NULL,
+    operation ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
+    record_id INT NOT NULL,
+    old_values JSON,
+    new_values JSON,
+    user_id INT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    INDEX idx_audit_table_name (table_name),
+    INDEX idx_audit_operation (operation),
+    INDEX idx_audit_timestamp (timestamp),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
