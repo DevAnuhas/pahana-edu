@@ -31,7 +31,7 @@ pahana-edu/
 │   │   └── App.jsx                  # Main application component
 │   └── package.json                 # Frontend dependencies
 ├── docs/                    # Project documentation
-├── docker/                  # Docker configurations (optional)
+├── docker/                  # Docker configurations
 ├── .gitignore              # Git ignore rules
 ├── package.json            # Monorepo management
 └── README.md               # This file

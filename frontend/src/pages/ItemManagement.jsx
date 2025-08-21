@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
 	Card,
 	CardContent,
@@ -68,19 +71,48 @@ const ItemManagement = () => {
 	});
 	const [retryCount, setRetryCount] = useState(0);
 
-	const [formData, setFormData] = useState({
-		isbn: "",
-		title: "",
-		author: "",
-		categoryId: "",
-		publisherId: "",
-		publicationYear: "",
-		price: "",
-		stockQuantity: "",
-		description: "",
+	const bookSchema = z.object({
+		isbn: z.string().regex(/^\d{13}$/, "ISBN must be 13 digits"),
+		title: z.string().min(1, "Title is required"),
+		author: z.string().min(1, "Author is required"),
+		categoryId: z.string().min(1, "Category is required"),
+		publisherId: z.string().min(1, "Publisher is required"),
+		price: z.preprocess(
+			(val) => (val === "" ? undefined : Number(val)),
+			z.number({ invalid_type_error: "Price must be a number" })
+		),
+		stockQuantity: z.preprocess(
+			(val) => (val === "" ? undefined : Number(val)),
+			z.number({ invalid_type_error: "Stock quantity must be a number" }).int()
+		),
+		publicationYear: z.preprocess(
+			(val) => (val === "" ? undefined : Number(val)),
+			z.number().int().optional()
+		),
+		description: z.string().optional(),
 	});
 
-	const [formErrors, setFormErrors] = useState({});
+	const {
+		register,
+		control,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(bookSchema),
+		mode: "onChange",
+		defaultValues: {
+			isbn: "",
+			title: "",
+			author: "",
+			categoryId: "",
+			publisherId: "",
+			publicationYear: "",
+			price: "",
+			stockQuantity: "",
+			description: "",
+		},
+	});
 
 	useEffect(() => {
 		fetchData();
@@ -149,59 +181,11 @@ const ItemManagement = () => {
 		setRetryCount((prev) => prev + 1);
 	};
 
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setFormData({
-			...formData,
-			[name]: value,
-		});
-
-		if (formErrors[name]) {
-			setFormErrors({
-				...formErrors,
-				[name]: "",
-			});
-		}
-	};
-
-	const handleSelectChange = (name, value) => {
-		setFormData({
-			...formData,
-			[name]: value,
-		});
-
-		if (formErrors[name]) {
-			setFormErrors({
-				...formErrors,
-				[name]: "",
-			});
-		}
-	};
-
-	const validateForm = () => {
-		const errors = {};
-		if (!formData.isbn) errors.isbn = "ISBN is required";
-		if (!formData.title) errors.title = "Title is required";
-		if (!formData.author) errors.author = "Author is required";
-		if (!formData.categoryId) errors.categoryId = "Category is required";
-		if (!formData.publisherId) errors.publisherId = "Publisher is required";
-		if (!formData.price) errors.price = "Price is required";
-		if (formData.price && isNaN(parseFloat(formData.price)))
-			errors.price = "Price must be a number";
-		if (!formData.stockQuantity)
-			errors.stockQuantity = "Stock quantity is required";
-		if (formData.stockQuantity && isNaN(parseInt(formData.stockQuantity)))
-			errors.stockQuantity = "Stock quantity must be a number";
-		if (formData.publicationYear && isNaN(parseInt(formData.publicationYear)))
-			errors.publicationYear = "Publication year must be a number";
-
-		setFormErrors(errors);
-		return Object.keys(errors).length === 0;
-	};
+	// removed manual form state and validation - using react-hook-form + zod instead
 
 	const openAddDialog = () => {
 		setSelectedBook(null);
-		setFormData({
+		reset({
 			isbn: "",
 			title: "",
 			author: "",
@@ -212,24 +196,29 @@ const ItemManagement = () => {
 			stockQuantity: "",
 			description: "",
 		});
-		setFormErrors({});
 		setIsAddDialogOpen(true);
 	};
 
 	const openEditDialog = (book) => {
 		setSelectedBook(book);
-		setFormData({
+		// reset form values from the selected book (convert ids to strings for Select)
+		reset({
 			isbn: book.isbn || "",
 			title: book.title || "",
 			author: book.author || "",
-			categoryId: book.categoryId || "",
-			publisherId: book.publisherId || "",
-			publicationYear: book.publicationYear || "",
-			price: book.price || "",
-			stockQuantity: book.stockQuantity || "",
+			categoryId: book.categoryId ? String(book.categoryId) : "",
+			publisherId: book.publisherId ? String(book.publisherId) : "",
+			publicationYear: book.publicationYear ? String(book.publicationYear) : "",
+			price:
+				book.price !== undefined && book.price !== null
+					? String(book.price)
+					: "",
+			stockQuantity:
+				book.stockQuantity !== undefined && book.stockQuantity !== null
+					? String(book.stockQuantity)
+					: "",
 			description: book.description || "",
 		});
-		setFormErrors({});
 		setIsAddDialogOpen(true);
 	};
 
@@ -238,17 +227,11 @@ const ItemManagement = () => {
 		setIsDeleteDialogOpen(true);
 	};
 
-	const handleSave = async () => {
-		if (!validateForm()) return;
-
-		// Convert numeric fields
+	const onSubmit = async (data) => {
+		// data is validated and preprocessed by zod/resolver
 		const bookData = {
-			...formData,
-			price: parseFloat(formData.price),
-			stockQuantity: parseInt(formData.stockQuantity),
-			publicationYear: formData.publicationYear
-				? parseInt(formData.publicationYear)
-				: null,
+			...data,
+			publicationYear: data.publicationYear ?? null,
 		};
 
 		setIsSaving(true);
@@ -496,16 +479,14 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="isbn"
-								name="isbn"
-								value={formData.isbn}
-								onChange={handleInputChange}
-								placeholder="978-0-123456-78-9"
+								{...register("isbn")}
+								placeholder="9780123456789"
 								className="col-span-3"
 								disabled={selectedBook}
 							/>
-							{formErrors.isbn && (
+							{errors.isbn && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.isbn}
+									{errors.isbn.message}
 								</p>
 							)}
 						</div>
@@ -515,15 +496,13 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="title"
-								name="title"
-								value={formData.title}
-								onChange={handleInputChange}
+								{...register("title")}
 								placeholder="Book Title"
 								className="col-span-3"
 							/>
-							{formErrors.title && (
+							{errors.title && (
 								<p className="text-red-500 text-xs col-span-3 col-start-2">
-									{formErrors.title}
+									{errors.title.message}
 								</p>
 							)}
 						</div>
@@ -533,15 +512,13 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="author"
-								name="author"
-								value={formData.author}
-								onChange={handleInputChange}
+								{...register("author")}
 								placeholder="Author Name"
 								className="col-span-3"
 							/>
-							{formErrors.author && (
+							{errors.author && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.author}
+									{errors.author.message}
 								</p>
 							)}
 						</div>
@@ -550,29 +527,30 @@ const ItemManagement = () => {
 								Category
 							</Label>
 							<div className="col-span-3">
-								<Select
-									value={formData.categoryId}
-									onValueChange={(value) =>
-										handleSelectChange("categoryId", value)
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select category" />
-									</SelectTrigger>
-									<SelectContent>
-										{categories.map((category) => (
-											<SelectItem
-												key={category.id}
-												value={category.id.toString()}
-											>
-												{category.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								{formErrors.categoryId && (
+								<Controller
+									control={control}
+									name="categoryId"
+									render={({ field }) => (
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger>
+												<SelectValue placeholder="Select category" />
+											</SelectTrigger>
+											<SelectContent>
+												{categories.map((category) => (
+													<SelectItem
+														key={category.id}
+														value={category.id.toString()}
+													>
+														{category.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+								{errors.categoryId && (
 									<p className="text-red-500 text-xs mt-1">
-										{formErrors.categoryId}
+										{errors.categoryId.message}
 									</p>
 								)}
 							</div>
@@ -582,29 +560,30 @@ const ItemManagement = () => {
 								Publisher
 							</Label>
 							<div className="col-span-3">
-								<Select
-									value={formData.publisherId}
-									onValueChange={(value) =>
-										handleSelectChange("publisherId", value)
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select publisher" />
-									</SelectTrigger>
-									<SelectContent>
-										{publishers.map((publisher) => (
-											<SelectItem
-												key={publisher.id}
-												value={publisher.id.toString()}
-											>
-												{publisher.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								{formErrors.publisherId && (
+								<Controller
+									control={control}
+									name="publisherId"
+									render={({ field }) => (
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger>
+												<SelectValue placeholder="Select publisher" />
+											</SelectTrigger>
+											<SelectContent>
+												{publishers.map((publisher) => (
+													<SelectItem
+														key={publisher.id}
+														value={publisher.id.toString()}
+													>
+														{publisher.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+								{errors.publisherId && (
 									<p className="text-red-500 text-xs mt-1">
-										{formErrors.publisherId}
+										{errors.publisherId.message}
 									</p>
 								)}
 							</div>
@@ -615,17 +594,15 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="price"
-								name="price"
 								type="number"
 								step="0.01"
-								value={formData.price}
-								onChange={handleInputChange}
+								{...register("price")}
 								placeholder="2500.00"
 								className="col-span-3"
 							/>
-							{formErrors.price && (
+							{errors.price && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.price}
+									{errors.price.message}
 								</p>
 							)}
 						</div>
@@ -635,16 +612,14 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="stock"
-								name="stockQuantity"
 								type="number"
-								value={formData.stockQuantity}
-								onChange={handleInputChange}
+								{...register("stockQuantity")}
 								placeholder="50"
 								className="col-span-3"
 							/>
-							{formErrors.stockQuantity && (
+							{errors.stockQuantity && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.stockQuantity}
+									{errors.stockQuantity.message}
 								</p>
 							)}
 						</div>
@@ -654,16 +629,14 @@ const ItemManagement = () => {
 							</Label>
 							<Input
 								id="year"
-								name="publicationYear"
 								type="number"
-								value={formData.publicationYear}
-								onChange={handleInputChange}
+								{...register("publicationYear")}
 								placeholder="2024"
 								className="col-span-3"
 							/>
-							{formErrors.publicationYear && (
+							{errors.publicationYear && (
 								<p className="text-red-500 text-xs mt-1 col-span-3 col-start-2">
-									{formErrors.publicationYear}
+									{errors.publicationYear.message}
 								</p>
 							)}
 						</div>
@@ -673,9 +646,7 @@ const ItemManagement = () => {
 							</Label>
 							<Textarea
 								id="description"
-								name="description"
-								value={formData.description}
-								onChange={handleInputChange}
+								{...register("description")}
 								placeholder="Book description"
 								className="col-span-3"
 								rows={3}
@@ -690,7 +661,7 @@ const ItemManagement = () => {
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleSave} disabled={isSaving}>
+						<Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
 							{isSaving ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
